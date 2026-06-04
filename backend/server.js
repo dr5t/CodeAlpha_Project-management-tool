@@ -2,10 +2,11 @@ const express = require('express');
 const cors = require('cors');
 const http = require('http');
 const path = require('path');
-const { initDB } = require('./db');
+const multer = require('multer');
+const { initDB, query } = require('./db');
 const { initSocket } = require('./socketHandler');
 
-const { router: authRouter } = require('./routes/auth');
+const { router: authRouter, authenticateToken } = require('./routes/auth');
 const projectsRouter = require('./routes/projects');
 const tasksRouter = require('./routes/tasks');
 const commentsRouter = require('./routes/comments');
@@ -14,15 +15,63 @@ const notificationsRouter = require('./routes/notifications');
 const app = express();
 const server = http.createServer(app);
 
-// Initialize database connection and schemas
 initDB();
-
-// Initialize WebSocket server attached to HTTP server
 initSocket(server);
 
-// Enable CORS and JSON parsing
 app.use(cors());
 app.use(express.json());
+
+// Serve uploaded avatars as static files
+const uploadsPath = path.join(__dirname, 'uploads');
+app.use('/uploads', express.static(uploadsPath));
+
+// ── Multer config for avatar uploads ─────────────────────────────────────────
+const avatarStorage = multer.diskStorage({
+  destination(req, file, cb) {
+    cb(null, path.join(__dirname, 'uploads/avatars'));
+  },
+  filename(req, file, cb) {
+    const ext = path.extname(file.originalname).toLowerCase();
+    cb(null, `avatar_${req.user?.id || Date.now()}${ext}`);
+  }
+});
+const avatarUpload = multer({
+  storage: avatarStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter(req, file, cb) {
+    const allowed = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (allowed.includes(ext)) cb(null, true);
+    else cb(new Error('Only image files are allowed'));
+  }
+});
+
+// POST /api/auth/profile/avatar — Upload profile picture
+app.post('/api/auth/profile/avatar', authenticateToken, avatarUpload.single('avatar'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No image file provided' });
+  try {
+    const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+    await query.run('UPDATE users SET avatar_url = ? WHERE id = ?', [avatarUrl, req.user.id]);
+    const updated = await query.get(
+      'SELECT id, username, email, avatar_color, avatar_url FROM users WHERE id = ?',
+      [req.user.id]
+    );
+    res.json({ user: updated, avatarUrl });
+  } catch (err) {
+    console.error('Avatar upload error:', err);
+    res.status(500).json({ error: 'Server error saving avatar' });
+  }
+});
+
+// DELETE /api/auth/profile/avatar — Remove profile picture
+app.delete('/api/auth/profile/avatar', authenticateToken, async (req, res) => {
+  try {
+    await query.run('UPDATE users SET avatar_url = NULL WHERE id = ?', [req.user.id]);
+    res.json({ message: 'Avatar removed' });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 
 // API Endpoint routing
 app.use('/api/auth', authRouter);
@@ -35,20 +84,13 @@ app.use('/api/notifications', notificationsRouter);
 const frontendDistPath = path.join(__dirname, '../frontend/dist');
 app.use(express.static(frontendDistPath));
 
-// Fallback all non-API paths to index.html for Single Page App router compatibility
 app.get('*', (req, res, next) => {
-  if (req.path.startsWith('/api/')) {
-    return next();
-  }
+  if (req.path.startsWith('/api/')) return next();
   res.sendFile(path.join(frontendDistPath, 'index.html'), (err) => {
-    if (err) {
-      res.status(200).send('Backend API and WebSockets server are running. Run "npm run dev" to start frontend in development mode.');
-    }
+    if (err) res.status(200).send('Backend API running. Start frontend dev server separately.');
   });
 });
 
 const PORT = process.env.PORT || 5001;
-server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+server.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
 module.exports = server;

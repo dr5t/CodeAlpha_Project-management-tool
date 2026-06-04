@@ -59,7 +59,8 @@ router.post('/register', async (req, res) => {
       id: insertResult.id,
       username: username.toLowerCase().trim(),
       email: email.toLowerCase().trim(),
-      avatar_color: color
+      avatar_color: color,
+      avatar_url: null
     };
 
     // Generate Token
@@ -99,7 +100,8 @@ router.post('/login', async (req, res) => {
       id: userRow.id,
       username: userRow.username,
       email: userRow.email,
-      avatar_color: userRow.avatar_color
+      avatar_color: userRow.avatar_color,
+      avatar_url: userRow.avatar_url || null
     };
 
     const token = jwt.sign(user, JWT_SECRET, { expiresIn: '7d' });
@@ -115,7 +117,7 @@ router.post('/login', async (req, res) => {
 router.get('/me', authenticateToken, async (req, res) => {
   try {
     const userRow = await query.get(
-      'SELECT id, username, email, avatar_color FROM users WHERE id = ?',
+      'SELECT id, username, email, avatar_color, avatar_url FROM users WHERE id = ?',
       [req.user.id]
     );
     if (!userRow) {
@@ -131,7 +133,7 @@ router.get('/me', authenticateToken, async (req, res) => {
 router.get('/users', authenticateToken, async (req, res) => {
   try {
     const usersList = await query.all(
-      'SELECT id, username, email, avatar_color FROM users ORDER BY username ASC'
+      'SELECT id, username, email, avatar_color, avatar_url FROM users ORDER BY username ASC'
     );
     res.json(usersList);
   } catch (err) {
@@ -158,7 +160,7 @@ router.put('/profile', authenticateToken, async (req, res) => {
     );
 
     const updated = await query.get(
-      'SELECT id, username, email, avatar_color FROM users WHERE id = ?',
+      'SELECT id, username, email, avatar_color, avatar_url FROM users WHERE id = ?',
       [req.user.id]
     );
 
