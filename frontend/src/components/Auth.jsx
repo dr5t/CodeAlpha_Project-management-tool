@@ -119,9 +119,9 @@ export default function Auth({ onAuthSuccess, API_URL }) {
         {/* LEFT COLUMN: Brand Logo and Animated Character */}
         <div className="auth-card-left">
           <div className="auth-logo-wrap" style={{ marginBottom: 12 }}>
-            <AgileSpaceLogo size={42} />
-            <div className="auth-brand">AgileSpace</div>
-            <div className="auth-tagline">Collaborative project management, reimagined.</div>
+            <AgileSpaceLogo size={42} className="auth-logo-anim" />
+            <div className="auth-brand auth-brand-anim">AgileSpace</div>
+            <div className="auth-tagline auth-tagline-anim">Collaborative project management, reimagined.</div>
           </div>
           
           {/* Animated human character */}
