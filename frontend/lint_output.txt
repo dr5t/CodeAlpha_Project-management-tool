@@ -1,0 +1,153 @@
+
+> frontend@0.0.0 lint
+> eslint .
+
+
+/Users/shauryatiwari/CodeAlpha_Project management tool/frontend/src/App.jsx
+    1:8   error    'React' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    no-unused-vars
+  116:20  error    Error: Cannot access variable before it is declared
+
+`handleLogout` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  114 |       .then(r => r.ok ? r.json() : Promise.reject('session_expired'))
+  115 |       .then(d => setUser(d.user))
+> 116 |       .catch(() => handleLogout());
+      |                    ^^^^^^^^^^^^ `handleLogout` accessed before it is declared
+  117 |   }, [token]);
+  118 |
+  119 |   // ─── Fetch data when logged in ───────────────────────────────────────────
+
+  201 |     setUser(userData);
+  202 |   };
+> 203 |   const handleLogout = () => {
+      |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 204 |     localStorage.removeItem('token');
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 205 |     setToken(''); setUser(null);
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 206 |     setProjects([]); setCurrentProject(null);
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 207 |     setTasks([]); setNotifications([]);
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 208 |     setCurrentView('dashboard');
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 209 |   };
+      | ^^^^^ `handleLogout` is declared here
+  210 |   const handleProfileUpdated = (updatedUser, newToken) => {
+  211 |     if (newToken) {
+  212 |       localStorage.setItem('token', newToken);  react-hooks/immutability
+  122:5   error    Error: Cannot access variable before it is declared
+
+`fetchProjects` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  120 |   useEffect(() => {
+  121 |     if (!user) return;
+> 122 |     fetchProjects();
+      |     ^^^^^^^^^^^^^ `fetchProjects` accessed before it is declared
+  123 |     fetchNotifications();
+  124 |   }, [user]);
+  125 |
+
+  176 |
+  177 |   // ─── Data fetchers ───────────────────────────────────────────────────────
+> 178 |   const fetchProjects = async () => {
+      |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 179 |     try {
+      | ^^^^^^^^^
+> 180 |       const r = await fetch(`${API_URL}/projects`, { headers: { Authorization: `Bearer ${token}` } });
+      | ^^^^^^^^^
+> 181 |       if (r.ok) { const d = await r.json(); setProjects(d); }
+      | ^^^^^^^^^
+> 182 |     } catch {}
+      | ^^^^^^^^^
+> 183 |   };
+      | ^^^^^ `fetchProjects` is declared here
+  184 |   const fetchTasks = async (pid) => {
+  185 |     try {
+  186 |       const r = await fetch(`${API_URL}/tasks/project/${pid}`, { headers: { Authorization: `Bearer ${token}` } });                                                                                                                                                                                                                react-hooks/immutability
+  123:5   error    Error: Cannot access variable before it is declared
+
+`fetchNotifications` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  121 |     if (!user) return;
+  122 |     fetchProjects();
+> 123 |     fetchNotifications();
+      |     ^^^^^^^^^^^^^^^^^^ `fetchNotifications` accessed before it is declared
+  124 |   }, [user]);
+  125 |
+  126 |   // ─── Fetch tasks when project changes ───────────────────────────────────
+
+  188 |     } catch {}
+  189 |   };
+> 190 |   const fetchNotifications = async () => {
+      |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 191 |     try {
+      | ^^^^^^^^^
+> 192 |       const r = await fetch(`${API_URL}/notifications`, { headers: { Authorization: `Bearer ${token}` } });
+      | ^^^^^^^^^
+> 193 |       if (r.ok) { const d = await r.json(); setNotifications(d); }
+      | ^^^^^^^^^
+> 194 |     } catch {}
+      | ^^^^^^^^^
+> 195 |   };
+      | ^^^^^ `fetchNotifications` is declared here
+  196 |
+  197 |   // ─── Auth ────────────────────────────────────────────────────────────────
+  198 |   const handleAuthSuccess = (userData, userToken) => {                                                                                                                                                                                                      react-hooks/immutability
+  124:6   warning  React Hook useEffect has missing dependencies: 'fetchNotifications' and 'fetchProjects'. Either include them or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          react-hooks/exhaustive-deps
+  128:28  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  126 |   // ─── Fetch tasks when project changes ───────────────────────────────────
+  127 |   useEffect(() => {
+> 128 |     if (!currentProject) { setTasks([]); return; }
+      |                            ^^^^^^^^ Avoid calling setState() directly within an effect
+  129 |     fetchTasks(currentProject.id);
+  130 |     if (wsRef.current?.readyState === WebSocket.OPEN) {
+  131 |       wsRef.current.send(JSON.stringify({ type: 'JOIN_PROJECT', projectId: currentProject.id, userId: user?.id }));                                                                                                                                                                react-hooks/set-state-in-effect
+  129:5   error    Error: Cannot access variable before it is declared
+
+`fetchTasks` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  127 |   useEffect(() => {
+  128 |     if (!currentProject) { setTasks([]); return; }
+> 129 |     fetchTasks(currentProject.id);
+      |     ^^^^^^^^^^ `fetchTasks` accessed before it is declared
+  130 |     if (wsRef.current?.readyState === WebSocket.OPEN) {
+  131 |       wsRef.current.send(JSON.stringify({ type: 'JOIN_PROJECT', projectId: currentProject.id, userId: user?.id }));
+  132 |     }
+
+  182 |     } catch {}
+  183 |   };
+> 184 |   const fetchTasks = async (pid) => {
+      |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 185 |     try {
+      | ^^^^^^^^^
+> 186 |       const r = await fetch(`${API_URL}/tasks/project/${pid}`, { headers: { Authorization: `Bearer ${token}` } });
+      | ^^^^^^^^^
+> 187 |       if (r.ok) { const d = await r.json(); setTasks(d); }
+      | ^^^^^^^^^
+> 188 |     } catch {}
+      | ^^^^^^^^^
+> 189 |   };
+      | ^^^^^ `fetchTasks` is declared here
+  190 |   const fetchNotifications = async () => {
+  191 |     try {
+  192 |       const r = await fetch(`${API_URL}/notifications`, { headers: { Authorization: `Bearer ${token}` } });                                                                                            react-hooks/immutability
+  138:6   warning  React Hook useEffect has missing dependencies: 'fetchTasks' and 'user?.id'. Either include them or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       react-hooks/exhaustive-deps
+  169:17  error    Empty block statement                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                no-empty
+  175:6   warning  React Hook useEffect has missing dependencies: 'currentProject', 'fetchProjects', 'fetchTasks', and 'showToast'. Either include them or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  react-hooks/exhaustive-deps
+  182:13  error    Empty block statement                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                no-empty
+  188:13  error    Empty block statement                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                no-empty
+  194:13  error    Empty block statement                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                no-empty
+  224:13  error    Empty block statement                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                no-empty
+  230:13  error    Empty block statement                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                no-empty
+  379:13  error    Empty block statement                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                no-empty
+
+✖ 16 problems (13 errors, 3 warnings)
+

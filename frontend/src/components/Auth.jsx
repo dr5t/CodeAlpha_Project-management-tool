@@ -83,15 +83,9 @@ export default function Auth({ onAuthSuccess, API_URL }) {
   const [error, setError] = useState('');
 
   // Dynamic aesthetic theme
-  const [selectedFont, setSelectedFont] = useState(HEADLINE_FONTS[2]); // Default Outfit
-  const [selectedGradient, setSelectedGradient] = useState(GRADIENT_PALETTES[0]);
+  const [selectedFont] = useState(() => HEADLINE_FONTS[Math.floor(Math.random() * HEADLINE_FONTS.length)]);
+  const [selectedGradient] = useState(() => GRADIENT_PALETTES[Math.floor(Math.random() * GRADIENT_PALETTES.length)]);
 
-  useEffect(() => {
-    const randomFont = HEADLINE_FONTS[Math.floor(Math.random() * HEADLINE_FONTS.length)];
-    const randomGradient = GRADIENT_PALETTES[Math.floor(Math.random() * GRADIENT_PALETTES.length)];
-    setSelectedFont(randomFont);
-    setSelectedGradient(randomGradient);
-  }, []);
 
   const [loginData, setLoginData] = useState({ email: '', password: '' });
   const [regData, setRegData] = useState({ username: '', email: '', password: '', confirm: '' });

@@ -78,14 +78,14 @@ export default function TaskModal({ taskId, onClose, API_URL, token, projectMemb
         setDueDate(tData.due_date ? tData.due_date.split('T')[0] : '');
         setAssigneeId(tData.assignee_id ? String(tData.assignee_id) : '');
         setComments(cData);
-      } catch (err) {
+      } catch {
         setError('Could not load task details.');
       } finally {
         setLoading(false);
       }
     };
     fetchTask();
-  }, [taskId]);
+  }, [taskId, API_URL, token]);
 
   // Listen for live WebSocket updates to refresh comments
   useEffect(() => {
@@ -98,11 +98,13 @@ export default function TaskModal({ taskId, onClose, API_URL, token, projectMemb
             .then(r => r.ok ? r.json() : null)
             .then(d => { if (d) setComments(d); });
         }
-      } catch {}
+      } catch {
+        // Ignore WS message parsing errors
+      }
     };
     window.addEventListener('websocket-message', handler);
     return () => window.removeEventListener('websocket-message', handler);
-  }, [taskId]);
+  }, [taskId, API_URL, token]);
 
   const handleSave = async () => {
     if (!title.trim()) { setError('Title is required.'); return; }
@@ -174,7 +176,9 @@ export default function TaskModal({ taskId, onClose, API_URL, token, projectMemb
         headers: { Authorization: `Bearer ${token}` }
       });
       setComments(prev => prev.filter(c => c.id !== commentId));
-    } catch {}
+    } catch {
+      // Ignore comment deletion errors
+    }
   };
 
   const handleClose = () => {
