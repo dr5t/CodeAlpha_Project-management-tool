@@ -48,10 +48,16 @@ async function initDB() {
         username TEXT UNIQUE NOT NULL,
         email TEXT UNIQUE NOT NULL,
         password_hash TEXT NOT NULL,
-        avatar_color TEXT NOT NULL,
+        avatar_color TEXT NOT NULL DEFAULT '#6366f1',
+        avatar_url TEXT DEFAULT NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
+
+    // Migration: add avatar_url if not exists (for existing databases)
+    try {
+      await query.run('ALTER TABLE users ADD COLUMN avatar_url TEXT DEFAULT NULL');
+    } catch (e) { /* column already exists */ }
 
     // 2. Create Projects Table
     await query.run(`
