@@ -1337,3 +1337,27 @@ dialog[open]::backdrop {
     padding: 30px 24px;
   }
 }
+
+/* ==================== AUTH HEADER ANIMATION ==================== */
+.auth-logo-anim {
+  animation: auth-slide-fade 0.8s var(--ease-spring) both;
+}
+.auth-brand-anim {
+  animation: auth-slide-fade 0.8s var(--ease-spring) both;
+  animation-delay: 150ms;
+}
+.auth-tagline-anim {
+  animation: auth-slide-fade 0.8s var(--ease-spring) both;
+  animation-delay: 300ms;
+}
+
+@keyframes auth-slide-fade {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
