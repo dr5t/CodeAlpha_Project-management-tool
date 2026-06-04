@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AgileSpaceLogo from './AgileSpaceLogo';
 import LoginCharacter from './LoginCharacter';
 
@@ -18,6 +18,40 @@ const EyeIcon = ({ show }) => {
       <circle cx="12" cy="12" r="3" />
       <line x1="3" y1="3" x2="21" y2="21" stroke="currentColor" strokeWidth="2.2" />
     </svg>
+  );
+};
+
+const Typewriter = ({ text, delay = 50, startDelay = 0, className = '', style = {} }) => {
+  const [currentText, setCurrentText] = useState('');
+  const [started, setStarted] = useState(false);
+  const [done, setDone] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setStarted(true);
+    }, startDelay);
+    return () => clearTimeout(timer);
+  }, [startDelay]);
+
+  useEffect(() => {
+    if (!started) return;
+    let i = 0;
+    const interval = setInterval(() => {
+      setCurrentText(text.slice(0, i + 1));
+      i++;
+      if (i >= text.length) {
+        clearInterval(interval);
+        setDone(true);
+      }
+    }, delay);
+    return () => clearInterval(interval);
+  }, [text, delay, started]);
+
+  return (
+    <span className={className} style={style}>
+      {currentText}
+      {!done && started && <span className="typewriter-cursor">|</span>}
+    </span>
   );
 };
 
@@ -120,8 +154,12 @@ export default function Auth({ onAuthSuccess, API_URL }) {
         <div className="auth-card-left">
           <div className="auth-logo-wrap" style={{ marginBottom: 12 }}>
             <AgileSpaceLogo size={42} className="auth-logo-anim" />
-            <div className="auth-brand auth-brand-anim">AgileSpace</div>
-            <div className="auth-tagline auth-tagline-anim">Collaborative project management, reimagined.</div>
+            <div className="auth-brand auth-brand-anim">
+              <Typewriter text="AgileSpace" delay={120} startDelay={100} />
+            </div>
+            <div className="auth-tagline auth-tagline-anim" style={{ minHeight: '2.8em' }}>
+              <Typewriter text="Collaborative project management, reimagined." delay={40} startDelay={1400} />
+            </div>
           </div>
           
           {/* Animated human character */}
