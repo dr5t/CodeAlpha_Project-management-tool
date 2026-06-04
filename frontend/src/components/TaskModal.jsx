@@ -274,7 +274,12 @@ export default function TaskModal({ taskId, onClose, API_URL, token, projectMemb
                 )}
 
                 {saveSuccess && (
-                  <div className="success-banner">✅ Task saved successfully</div>
+                  <div className="success-banner">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                      <polyline strokeLinecap="round" strokeLinejoin="round" points="20 6 9 17 4 12"/>
+                    </svg>
+                    Task saved successfully
+                  </div>
                 )}
 
                 {/* Comments */}
