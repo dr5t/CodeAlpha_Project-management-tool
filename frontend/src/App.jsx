@@ -150,13 +150,15 @@ export default function App() {
       .then(r => r.ok ? r.json() : Promise.reject('session_expired'))
       .then(d => setUser(d.user))
       .catch(() => handleLogout());
-  }, [token]);
+  }, [token, handleLogout]);
 
   // ─── Fetch data when logged in ───────────────────────────────────────────
   useEffect(() => {
     if (!user) return;
-    fetchProjects();
-    fetchNotifications();
+    Promise.resolve().then(() => {
+      fetchProjects();
+      fetchNotifications();
+    });
   }, [user, fetchNotifications, fetchProjects]);
 
   // ─── Fetch tasks when project changes ───────────────────────────────────
@@ -165,7 +167,9 @@ export default function App() {
       Promise.resolve().then(() => setTasks([]));
       return;
     }
-    fetchTasks(currentProject.id);
+    Promise.resolve().then(() => {
+      fetchTasks(currentProject.id);
+    });
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({ type: 'JOIN_PROJECT', projectId: currentProject.id, userId: user?.id }));
     }
