@@ -4,25 +4,10 @@ const { query } = require('../db');
 const { authenticateToken } = require('./auth');
 const { broadcastToProject, sendNotificationToUser } = require('../socketHandler');
 
-// GET /tasks/:taskId/comments - Get comments for a task
-router.get('/:taskId', authenticateToken, async (req, res) => {
+// GET /api/comments/task/:taskId
+router.get('/task/:taskId', authenticateToken, async (req, res) => {
   const taskId = req.params.taskId;
   try {
-    // Validate project membership through task
-    const task = await query.get('SELECT project_id FROM tasks WHERE id = ?', [taskId]);
-    if (!task) {
-      return res.status(404).json({ error: 'Task not found' });
-    }
-
-    const membership = await query.get(
-      'SELECT 1 FROM project_members pm JOIN projects p ON p.id = pm.project_id WHERE p.id = ? AND (p.owner_id = ? OR pm.user_id = ?)',
-      [task.project_id, req.user.id, req.user.id]
-    );
-
-    if (!membership) {
-      return res.status(403).json({ error: 'Unauthorized to view comments' });
-    }
-
     const comments = await query.all(`
       SELECT c.id, c.task_id, c.user_id, c.content, c.created_at,
              u.username, u.avatar_color
@@ -31,94 +16,101 @@ router.get('/:taskId', authenticateToken, async (req, res) => {
       WHERE c.task_id = ?
       ORDER BY c.created_at ASC
     `, [taskId]);
-
     res.json(comments);
   } catch (err) {
-    console.error('Error fetching comments:', err);
     res.status(500).json({ error: 'Server error loading comments' });
   }
 });
 
-// POST /tasks/:taskId/comments - Add comment to a task
-router.post('/:taskId', authenticateToken, async (req, res) => {
+// POST /api/comments/task/:taskId
+router.post('/task/:taskId', authenticateToken, async (req, res) => {
   const taskId = req.params.taskId;
   const { content } = req.body;
-
-  if (!content || !content.trim()) {
-    return res.status(400).json({ error: 'Comment content cannot be empty' });
-  }
+  if (!content || !content.trim()) return res.status(400).json({ error: 'Comment content cannot be empty' });
 
   try {
     const task = await query.get('SELECT project_id, title, assignee_id FROM tasks WHERE id = ?', [taskId]);
-    if (!task) {
-      return res.status(404).json({ error: 'Task not found' });
-    }
-
+    if (!task) return res.status(404).json({ error: 'Task not found' });
     const projectId = task.project_id;
-
-    // Verify membership
-    const membership = await query.get(
-      'SELECT 1 FROM project_members pm JOIN projects p ON p.id = pm.project_id WHERE p.id = ? AND (p.owner_id = ? OR pm.user_id = ?)',
-      [projectId, req.user.id, req.user.id]
-    );
-
-    if (!membership) {
-      return res.status(403).json({ error: 'Unauthorized to add comments' });
-    }
 
     const result = await query.run(
       'INSERT INTO comments (task_id, user_id, content) VALUES (?, ?, ?)',
       [taskId, req.user.id, content.trim()]
     );
 
-    const commentId = result.id;
-
-    // Fetch newly created comment info
     const newComment = await query.get(`
       SELECT c.id, c.task_id, c.user_id, c.content, c.created_at,
              u.username, u.avatar_color
       FROM comments c
       JOIN users u ON c.user_id = u.id
       WHERE c.id = ?
-    `, [commentId]);
+    `, [result.id]);
 
-    // Send notification to the assignee if they aren't the author
+    // Notify assignee if different from commenter
     if (task.assignee_id && Number(task.assignee_id) !== Number(req.user.id)) {
-      const msg = `${req.user.username} commented on your task "${task.title}": "${content.substring(0, 30)}${content.length > 30 ? '...' : ''}"`;
+      const msg = `${req.user.username} commented on "${task.title}"`;
       const notifyRes = await query.run(
         'INSERT INTO notifications (user_id, project_id, task_id, type, message) VALUES (?, ?, ?, ?, ?)',
-        [task.assignee_id, projectId, taskId, 'task_comment', msg]
+        [task.assignee_id, projectId, taskId, 'comment_added', msg]
       );
-
       sendNotificationToUser(task.assignee_id, {
-        id: notifyRes.id,
-        project_id: projectId,
-        task_id: taskId,
-        type: 'task_comment',
-        message: msg,
-        is_read: 0,
+        id: notifyRes.id, project_id: projectId, task_id: taskId,
+        type: 'comment_added', message: msg, is_read: 0,
         created_at: new Date().toISOString()
       });
     }
 
-    // Broadcast new comment to anyone viewing the project
-    broadcastToProject(projectId, {
-      type: 'COMMENT_ADDED',
-      taskId: taskId,
-      comment: newComment
-    });
-
-    // Also broadcast board updated to sync comment counters
-    broadcastToProject(projectId, {
-      type: 'BOARD_UPDATED',
-      projectId: projectId,
-      senderId: req.user.id
-    });
-
+    broadcastToProject(projectId, { type: 'BOARD_UPDATED', projectId, senderId: req.user.id });
     res.status(201).json(newComment);
   } catch (err) {
     console.error('Error adding comment:', err);
     res.status(500).json({ error: 'Server error adding comment' });
+  }
+});
+
+// DELETE /api/comments/:commentId
+router.delete('/:commentId', authenticateToken, async (req, res) => {
+  const { commentId } = req.params;
+  try {
+    const comment = await query.get('SELECT user_id FROM comments WHERE id = ?', [commentId]);
+    if (!comment) return res.status(404).json({ error: 'Comment not found' });
+    if (comment.user_id !== req.user.id) return res.status(403).json({ error: 'Only the author can delete this comment' });
+    await query.run('DELETE FROM comments WHERE id = ?', [commentId]);
+    res.json({ message: 'Comment deleted' });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Legacy: GET /api/comments/:taskId
+router.get('/:taskId', authenticateToken, async (req, res) => {
+  const taskId = req.params.taskId;
+  try {
+    const comments = await query.all(`
+      SELECT c.id, c.task_id, c.user_id, c.content, c.created_at, u.username, u.avatar_color
+      FROM comments c JOIN users u ON c.user_id = u.id
+      WHERE c.task_id = ? ORDER BY c.created_at ASC
+    `, [taskId]);
+    res.json(comments);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Legacy: POST /api/comments/:taskId
+router.post('/:taskId', authenticateToken, async (req, res) => {
+  const taskId = req.params.taskId;
+  const { content } = req.body;
+  if (!content?.trim()) return res.status(400).json({ error: 'Content required' });
+  try {
+    const result = await query.run('INSERT INTO comments (task_id, user_id, content) VALUES (?, ?, ?)', [taskId, req.user.id, content.trim()]);
+    const comment = await query.get(
+      'SELECT c.id, c.task_id, c.user_id, c.content, c.created_at, u.username, u.avatar_color FROM comments c JOIN users u ON c.user_id = u.id WHERE c.id = ?',
+      [result.id]
+    );
+    res.status(201).json(comment);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
