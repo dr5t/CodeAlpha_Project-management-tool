@@ -1392,3 +1392,20 @@ dialog[open]::backdrop {
   font-weight: 500;
   -webkit-text-fill-color: #ec4899 !important; /* Override gradient transparency for the cursor */
 }
+
+/* ==================== SHIFTING GRADIENT ANIMATION ==================== */
+.animate-gradient-motion {
+  background-size: 200% auto !important;
+  animation: auth-gradient-shift 5s ease infinite !important;
+}
+@keyframes auth-gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}

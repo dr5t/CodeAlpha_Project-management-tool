@@ -55,10 +55,43 @@ const Typewriter = ({ text, delay = 50, startDelay = 0, className = '', style = 
   );
 };
 
+const HEADLINE_FONTS = [
+  { family: "'Syne', sans-serif", name: 'Syne' },
+  { family: "'Orbitron', sans-serif", name: 'Orbitron' },
+  { family: "'Outfit', sans-serif", name: 'Outfit' },
+  { family: "'Righteous', sans-serif", name: 'Righteous' },
+  { family: "'Space Grotesk', sans-serif", name: 'Space Grotesk' },
+  { family: "'Cinzel', serif", name: 'Cinzel' },
+  { family: "'Playfair Display', serif", name: 'Playfair Display' },
+  { family: "'Syncopate', sans-serif", name: 'Syncopate' },
+  { family: "'Unbounded', sans-serif", name: 'Unbounded' },
+  { family: "'Plus Jakarta Sans', sans-serif", name: 'Plus Jakarta Sans' }
+];
+
+const GRADIENT_PALETTES = [
+  'linear-gradient(135deg, #06b6d4 0%, #a855f7 50%, #ec4899 100%)',
+  'linear-gradient(135deg, #ff007f 0%, #ff7e00 50%, #ff00ff 100%)',
+  'linear-gradient(135deg, #00f2fe 0%, #4facfe 50%, #6366f1 100%)',
+  'linear-gradient(135deg, #10b981 0%, #06b6d4 50%, #6366f1 100%)',
+  'linear-gradient(135deg, #f59e0b 0%, #ef4444 50%, #ec4899 100%)',
+  'linear-gradient(135deg, #34d399 0%, #3b82f6 50%, #8b5cf6 100%)'
+];
+
 export default function Auth({ onAuthSuccess, API_URL }) {
   const [tab, setTab] = useState('login');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Dynamic aesthetic theme
+  const [selectedFont, setSelectedFont] = useState(HEADLINE_FONTS[2]); // Default Outfit
+  const [selectedGradient, setSelectedGradient] = useState(GRADIENT_PALETTES[0]);
+
+  useEffect(() => {
+    const randomFont = HEADLINE_FONTS[Math.floor(Math.random() * HEADLINE_FONTS.length)];
+    const randomGradient = GRADIENT_PALETTES[Math.floor(Math.random() * GRADIENT_PALETTES.length)];
+    setSelectedFont(randomFont);
+    setSelectedGradient(randomGradient);
+  }, []);
 
   const [loginData, setLoginData] = useState({ email: '', password: '' });
   const [regData, setRegData] = useState({ username: '', email: '', password: '', confirm: '' });
@@ -154,7 +187,13 @@ export default function Auth({ onAuthSuccess, API_URL }) {
         <div className="auth-card-left">
           <div className="auth-logo-wrap" style={{ marginBottom: 12 }}>
             <AgileSpaceLogo size={42} className="auth-logo-anim" />
-            <div className="auth-brand auth-brand-anim">
+            <div 
+              className="auth-brand auth-brand-anim animate-gradient-motion"
+              style={{
+                fontFamily: selectedFont.family,
+                backgroundImage: selectedGradient,
+              }}
+            >
               <Typewriter text="AgileSpace" delay={120} startDelay={100} />
             </div>
             <div className="auth-tagline auth-tagline-anim" style={{ minHeight: '2.8em' }}>
