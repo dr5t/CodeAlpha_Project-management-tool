@@ -107,6 +107,42 @@ export default function App() {
 
   const dismissToast = (id) => setToasts(prev => prev.filter(t => t.id !== id));
 
+  // ─── Auth / Data Fetching callbacks (Memoized to prevent render loop warnings) ───
+  const handleLogout = useCallback(() => {
+    localStorage.removeItem('token');
+    setToken(''); setUser(null);
+    setProjects([]); setCurrentProject(null);
+    setTasks([]); setNotifications([]);
+    setCurrentView('dashboard');
+  }, []);
+
+  const fetchProjects = useCallback(async () => {
+    try {
+      const r = await fetch(`${API_URL}/projects`, { headers: { Authorization: `Bearer ${token}` } });
+      if (r.ok) { const d = await r.json(); setProjects(d); }
+    } catch {
+      // Ignore fetch projects errors
+    }
+  }, [token]);
+
+  const fetchTasks = useCallback(async (pid) => {
+    try {
+      const r = await fetch(`${API_URL}/tasks/project/${pid}`, { headers: { Authorization: `Bearer ${token}` } });
+      if (r.ok) { const d = await r.json(); setTasks(d); }
+    } catch {
+      // Ignore fetch tasks errors
+    }
+  }, [token]);
+
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const r = await fetch(`${API_URL}/notifications`, { headers: { Authorization: `Bearer ${token}` } });
+      if (r.ok) { const d = await r.json(); setNotifications(d); }
+    } catch {
+      // Ignore fetch notifications errors
+    }
+  }, [token]);
+
   // ─── Session restore ─────────────────────────────────────────────────────
   useEffect(() => {
     if (!token) return;
@@ -179,31 +215,7 @@ export default function App() {
     return () => socket?.close();
   }, [user, currentProject, fetchProjects, fetchTasks, showToast]);
 
-  // ─── Data fetchers ───────────────────────────────────────────────────────
-  async function fetchProjects() {
-    try {
-      const r = await fetch(`${API_URL}/projects`, { headers: { Authorization: `Bearer ${token}` } });
-      if (r.ok) { const d = await r.json(); setProjects(d); }
-    } catch {
-      // Ignore fetch projects errors
-    }
-  }
-  async function fetchTasks(pid) {
-    try {
-      const r = await fetch(`${API_URL}/tasks/project/${pid}`, { headers: { Authorization: `Bearer ${token}` } });
-      if (r.ok) { const d = await r.json(); setTasks(d); }
-    } catch {
-      // Ignore fetch tasks errors
-    }
-  }
-  async function fetchNotifications() {
-    try {
-      const r = await fetch(`${API_URL}/notifications`, { headers: { Authorization: `Bearer ${token}` } });
-      if (r.ok) { const d = await r.json(); setNotifications(d); }
-    } catch {
-      // Ignore fetch notifications errors
-    }
-  }
+
 
   // ─── Auth ────────────────────────────────────────────────────────────────
   const handleAuthSuccess = (userData, userToken) => {
@@ -211,13 +223,6 @@ export default function App() {
     setToken(userToken);
     setUser(userData);
   };
-  function handleLogout() {
-    localStorage.removeItem('token');
-    setToken(''); setUser(null);
-    setProjects([]); setCurrentProject(null);
-    setTasks([]); setNotifications([]);
-    setCurrentView('dashboard');
-  }
   const handleProfileUpdated = (updatedUser, newToken) => {
     if (newToken) {
       localStorage.setItem('token', newToken);
