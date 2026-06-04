@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Auth from './components/Auth';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
@@ -121,11 +121,14 @@ export default function App() {
     if (!user) return;
     fetchProjects();
     fetchNotifications();
-  }, [user]);
+  }, [user, fetchNotifications, fetchProjects]);
 
   // ─── Fetch tasks when project changes ───────────────────────────────────
   useEffect(() => {
-    if (!currentProject) { setTasks([]); return; }
+    if (!currentProject) {
+      Promise.resolve().then(() => setTasks([]));
+      return;
+    }
     fetchTasks(currentProject.id);
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({ type: 'JOIN_PROJECT', projectId: currentProject.id, userId: user?.id }));
@@ -135,7 +138,7 @@ export default function App() {
         wsRef.current.send(JSON.stringify({ type: 'LEAVE_PROJECT' }));
       }
     };
-  }, [currentProject]);
+  }, [currentProject, fetchTasks, user?.id]);
 
   // ─── WebSocket ───────────────────────────────────────────────────────────
   useEffect(() => {
@@ -166,33 +169,41 @@ export default function App() {
             setNotifications(prev => [msg.notification, ...prev]);
             showToast(msg.notification.message, 'info');
           }
-        } catch {}
+        } catch {
+          // Ignore WS JSON parse errors
+        }
       };
       socket.onclose = () => setTimeout(connect, 5000);
     };
     connect();
     return () => socket?.close();
-  }, [user]);
+  }, [user, currentProject, fetchProjects, fetchTasks, showToast]);
 
   // ─── Data fetchers ───────────────────────────────────────────────────────
-  const fetchProjects = async () => {
+  async function fetchProjects() {
     try {
       const r = await fetch(`${API_URL}/projects`, { headers: { Authorization: `Bearer ${token}` } });
       if (r.ok) { const d = await r.json(); setProjects(d); }
-    } catch {}
-  };
-  const fetchTasks = async (pid) => {
+    } catch {
+      // Ignore fetch projects errors
+    }
+  }
+  async function fetchTasks(pid) {
     try {
       const r = await fetch(`${API_URL}/tasks/project/${pid}`, { headers: { Authorization: `Bearer ${token}` } });
       if (r.ok) { const d = await r.json(); setTasks(d); }
-    } catch {}
-  };
-  const fetchNotifications = async () => {
+    } catch {
+      // Ignore fetch tasks errors
+    }
+  }
+  async function fetchNotifications() {
     try {
       const r = await fetch(`${API_URL}/notifications`, { headers: { Authorization: `Bearer ${token}` } });
       if (r.ok) { const d = await r.json(); setNotifications(d); }
-    } catch {}
-  };
+    } catch {
+      // Ignore fetch notifications errors
+    }
+  }
 
   // ─── Auth ────────────────────────────────────────────────────────────────
   const handleAuthSuccess = (userData, userToken) => {
@@ -200,13 +211,13 @@ export default function App() {
     setToken(userToken);
     setUser(userData);
   };
-  const handleLogout = () => {
+  function handleLogout() {
     localStorage.removeItem('token');
     setToken(''); setUser(null);
     setProjects([]); setCurrentProject(null);
     setTasks([]); setNotifications([]);
     setCurrentView('dashboard');
-  };
+  }
   const handleProfileUpdated = (updatedUser, newToken) => {
     if (newToken) {
       localStorage.setItem('token', newToken);
@@ -221,13 +232,17 @@ export default function App() {
     try {
       await fetch(`${API_URL}/notifications/${id}/read`, { method: 'PUT', headers: { Authorization: `Bearer ${token}` } });
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: 1 } : n));
-    } catch {}
+    } catch {
+      // Ignore mark notification read errors
+    }
   };
   const handleMarkAllNotificationsRead = async () => {
     try {
       await fetch(`${API_URL}/notifications/read-all`, { method: 'PUT', headers: { Authorization: `Bearer ${token}` } });
       setNotifications(prev => prev.map(n => ({ ...n, is_read: 1 })));
-    } catch {}
+    } catch {
+      // Ignore mark all notifications read errors
+    }
   };
 
   // ─── Navigate to project + optional task ────────────────────────────────
@@ -376,7 +391,9 @@ export default function App() {
       setSystemUsers(eligible);
       setInviteUserId(eligible[0]?.id || '');
       setShowInvite(true);
-    } catch {}
+    } catch {
+      // Ignore invite member load errors
+    }
   };
 
   const handleInviteSubmit = async (e) => {
