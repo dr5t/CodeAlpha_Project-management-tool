@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import AgileSpaceLogo from './AgileSpaceLogo';
 
 export default function Auth({ onAuthSuccess, API_URL }) {
   const [isLogin, setIsLogin] = useState(true);
@@ -43,8 +44,8 @@ export default function Auth({ onAuthSuccess, API_URL }) {
     <div className="auth-container">
       <div className="auth-card glass">
         <div className="auth-header">
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '15px' }}>
-            <div className="logo-icon">P</div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+            <AgileSpaceLogo size={64} showBg={true} />
           </div>
           <h1>{isLogin ? 'Welcome Back' : 'Create Account'}</h1>
           <p>{isLogin ? 'Sign in to access your projects' : 'Get started with collaborative boards'}</p>
