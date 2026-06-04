@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import AgileSpaceLogo from './AgileSpaceLogo';
-import LoginMascot from './LoginMascot';
+import LoginCharacter from './LoginCharacter';
 
 // Custom Eye icon helper
 const EyeIcon = ({ show }) => {
@@ -114,152 +114,158 @@ export default function Auth({ onAuthSuccess, API_URL }) {
 
   return (
     <div className="auth-page">
-      <div className="auth-card">
-        {/* Brand Header */}
-        <div className="auth-logo-wrap">
-          <AgileSpaceLogo size={42} />
-          <div className="auth-brand">AgileSpace</div>
-          <div className="auth-tagline">Collaborative project management, reimagined.</div>
-        </div>
-
-        {/* Animated Mascot */}
-        <LoginMascot state={getMascotState()} />
-
-        {/* Tab Switches */}
-        <div className="auth-tabs">
-          <button className={`auth-tab${tab === 'login' ? ' active' : ''}`} onClick={() => switchTab('login')} id="tab-login">
-            Sign In
-          </button>
-          <button className={`auth-tab${tab === 'register' ? ' active' : ''}`} onClick={() => switchTab('register')} id="tab-register">
-            Create Account
-          </button>
-        </div>
-
-        {error && (
-          <div className="error-banner">
-            <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="10"/><path strokeLinecap="round" d="M12 8v4m0 4h.01"/>
-            </svg>
-            {error}
+      <div className="auth-card split">
+        
+        {/* LEFT COLUMN: Brand Logo and Animated Character */}
+        <div className="auth-card-left">
+          <div className="auth-logo-wrap" style={{ marginBottom: 12 }}>
+            <AgileSpaceLogo size={42} />
+            <div className="auth-brand">AgileSpace</div>
+            <div className="auth-tagline">Collaborative project management, reimagined.</div>
           </div>
-        )}
+          
+          {/* Animated human character */}
+          <LoginCharacter state={getMascotState()} />
+        </div>
 
-        {tab === 'login' ? (
-          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <div className="form-field">
-              <label className="form-label" htmlFor="login-email">Email address</label>
-              <input
-                id="login-email" name="email" type="email" className="form-input"
-                placeholder="you@example.com" autoComplete="email"
-                value={loginData.email} onChange={handleLoginChange} required
-                onFocus={() => setActiveField('email')}
-                onBlur={() => setActiveField('none')}
-              />
-            </div>
-            <div className="form-field">
-              <label className="form-label" htmlFor="login-password">Password</label>
-              <div className="password-input-wrapper">
-                <input
-                  id="login-password" name="password"
-                  type={showLoginPassword ? 'text' : 'password'}
-                  className="form-input"
-                  placeholder="••••••••" autoComplete="current-password"
-                  value={loginData.password} onChange={handleLoginChange} required
-                  onFocus={() => setActiveField('password')}
-                  onBlur={() => setActiveField('none')}
-                />
-                <button
-                  type="button"
-                  className="password-toggle-btn"
-                  onClick={() => setShowLoginPassword(p => !p)}
-                  title={showLoginPassword ? 'Hide password' : 'Show password'}
-                >
-                  <EyeIcon show={showLoginPassword} />
-                </button>
-              </div>
-            </div>
-            <button id="login-submit" type="submit" className="btn btn-primary btn-full auth-submit" disabled={loading}>
-              {loading ? <><span className="loading-spinner" style={{width:16,height:16,borderWidth:2}} /> Signing in…</> : 'Sign In'}
+        {/* RIGHT COLUMN: Sign In / Create Account Form */}
+        <div className="auth-card-right">
+          {/* Tab Switches */}
+          <div className="auth-tabs">
+            <button className={`auth-tab${tab === 'login' ? ' active' : ''}`} onClick={() => switchTab('login')} id="tab-login">
+              Sign In
             </button>
-          </form>
-        ) : (
-          <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <div className="form-field">
-              <label className="form-label" htmlFor="reg-username">Username</label>
-              <input
-                id="reg-username" name="username" type="text" className="form-input"
-                placeholder="yourname" autoComplete="username"
-                value={regData.username} onChange={handleRegChange} required
-                onFocus={() => setActiveField('username')}
-                onBlur={() => setActiveField('none')}
-              />
-            </div>
-            <div className="form-field">
-              <label className="form-label" htmlFor="reg-email">Email address</label>
-              <input
-                id="reg-email" name="email" type="email" className="form-input"
-                placeholder="you@example.com" autoComplete="email"
-                value={regData.email} onChange={handleRegChange} required
-                onFocus={() => setActiveField('email')}
-                onBlur={() => setActiveField('none')}
-              />
-            </div>
-            <div className="form-field">
-              <label className="form-label" htmlFor="reg-password">Password</label>
-              <div className="password-input-wrapper">
-                <input
-                  id="reg-password" name="password"
-                  type={showRegPassword ? 'text' : 'password'}
-                  className="form-input"
-                  placeholder="Min. 6 characters" autoComplete="new-password"
-                  value={regData.password} onChange={handleRegChange} required
-                  onFocus={() => setActiveField('reg-password')}
-                  onBlur={() => setActiveField('none')}
-                />
-                <button
-                  type="button"
-                  className="password-toggle-btn"
-                  onClick={() => setShowRegPassword(p => !p)}
-                  title={showRegPassword ? 'Hide password' : 'Show password'}
-                >
-                  <EyeIcon show={showRegPassword} />
-                </button>
-              </div>
-            </div>
-            <div className="form-field">
-              <label className="form-label" htmlFor="reg-confirm">Confirm password</label>
-              <div className="password-input-wrapper">
-                <input
-                  id="reg-confirm" name="confirm"
-                  type={showRegConfirmPassword ? 'text' : 'password'}
-                  className="form-input"
-                  placeholder="Re-enter password" autoComplete="new-password"
-                  value={regData.confirm} onChange={handleRegChange} required
-                  onFocus={() => setActiveField('reg-confirm')}
-                  onBlur={() => setActiveField('none')}
-                />
-                <button
-                  type="button"
-                  className="password-toggle-btn"
-                  onClick={() => setShowRegConfirmPassword(p => !p)}
-                  title={showRegConfirmPassword ? 'Hide password' : 'Show password'}
-                >
-                  <EyeIcon show={showRegConfirmPassword} />
-                </button>
-              </div>
-            </div>
-            <button id="register-submit" type="submit" className="btn btn-primary btn-full auth-submit" disabled={loading}>
-              {loading ? <><span className="loading-spinner" style={{width:16,height:16,borderWidth:2}} /> Creating account…</> : 'Create Account'}
+            <button className={`auth-tab${tab === 'register' ? ' active' : ''}`} onClick={() => switchTab('register')} id="tab-register">
+              Create Account
             </button>
-          </form>
-        )}
+          </div>
 
-        <div className="auth-switch">
-          {tab === 'login' ? (
-            <>Don't have an account?<button onClick={() => switchTab('register')}>Sign up free</button></>
-          ) : (
-            <>Already have an account?<button onClick={() => switchTab('login')}>Sign in</button></>
+          {error && (
+            <div className="error-banner">
+              <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"/><path strokeLinecap="round" d="M12 8v4m0 4h.01"/>
+              </svg>
+              {error}
+            </div>
           )}
+
+          {tab === 'login' ? (
+            <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <div className="form-field">
+                <label className="form-label" htmlFor="login-email">Email address</label>
+                <input
+                  id="login-email" name="email" type="email" className="form-input"
+                  placeholder="you@example.com" autoComplete="email"
+                  value={loginData.email} onChange={handleLoginChange} required
+                  onFocus={() => setActiveField('email')}
+                  onBlur={() => setActiveField('none')}
+                />
+              </div>
+              <div className="form-field">
+                <label className="form-label" htmlFor="login-password">Password</label>
+                <div className="password-input-wrapper">
+                  <input
+                    id="login-password" name="password"
+                    type={showLoginPassword ? 'text' : 'password'}
+                    className="form-input"
+                    placeholder="••••••••" autoComplete="current-password"
+                    value={loginData.password} onChange={handleLoginChange} required
+                    onFocus={() => setActiveField('password')}
+                    onBlur={() => setActiveField('none')}
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle-btn"
+                    onClick={() => setShowLoginPassword(p => !p)}
+                    title={showLoginPassword ? 'Hide password' : 'Show password'}
+                  >
+                    <EyeIcon show={showLoginPassword} />
+                  </button>
+                </div>
+              </div>
+              <button id="login-submit" type="submit" className="btn btn-primary btn-full auth-submit" disabled={loading}>
+                {loading ? <><span className="loading-spinner" style={{width:16,height:16,borderWidth:2}} /> Signing in…</> : 'Sign In'}
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <div className="form-field">
+                <label className="form-label" htmlFor="reg-username">Username</label>
+                <input
+                  id="reg-username" name="username" type="text" className="form-input"
+                  placeholder="yourname" autoComplete="username"
+                  value={regData.username} onChange={handleRegChange} required
+                  onFocus={() => setActiveField('username')}
+                  onBlur={() => setActiveField('none')}
+                />
+              </div>
+              <div className="form-field">
+                <label className="form-label" htmlFor="reg-email">Email address</label>
+                <input
+                  id="reg-email" name="email" type="email" className="form-input"
+                  placeholder="you@example.com" autoComplete="email"
+                  value={regData.email} onChange={handleRegChange} required
+                  onFocus={() => setActiveField('email')}
+                  onBlur={() => setActiveField('none')}
+                />
+              </div>
+              <div className="form-field">
+                <label className="form-label" htmlFor="reg-password">Password</label>
+                <div className="password-input-wrapper">
+                  <input
+                    id="reg-password" name="password"
+                    type={showRegPassword ? 'text' : 'password'}
+                    className="form-input"
+                    placeholder="Min. 6 characters" autoComplete="new-password"
+                    value={regData.password} onChange={handleRegChange} required
+                    onFocus={() => setActiveField('reg-password')}
+                    onBlur={() => setActiveField('none')}
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle-btn"
+                    onClick={() => setShowRegPassword(p => !p)}
+                    title={showRegPassword ? 'Hide password' : 'Show password'}
+                  >
+                    <EyeIcon show={showRegPassword} />
+                  </button>
+                </div>
+              </div>
+              <div className="form-field">
+                <label className="form-label" htmlFor="reg-confirm">Confirm password</label>
+                <div className="password-input-wrapper">
+                  <input
+                    id="reg-confirm" name="confirm"
+                    type={showRegConfirmPassword ? 'text' : 'password'}
+                    className="form-input"
+                    placeholder="Re-enter password" autoComplete="new-password"
+                    value={regData.confirm} onChange={handleRegChange} required
+                    onFocus={() => setActiveField('reg-confirm')}
+                    onBlur={() => setActiveField('none')}
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle-btn"
+                    onClick={() => setShowRegConfirmPassword(p => !p)}
+                    title={showRegConfirmPassword ? 'Hide password' : 'Show password'}
+                  >
+                    <EyeIcon show={showRegConfirmPassword} />
+                  </button>
+                </div>
+              </div>
+              <button id="register-submit" type="submit" className="btn btn-primary btn-full auth-submit" disabled={loading}>
+                {loading ? <><span className="loading-spinner" style={{width:16,height:16,borderWidth:2}} /> Creating account…</> : 'Create Account'}
+              </button>
+            </form>
+          )}
+
+          <div className="auth-switch" style={{ marginTop: 24 }}>
+            {tab === 'login' ? (
+              <>Don't have an account?<button onClick={() => switchTab('register')}>Sign up free</button></>
+            ) : (
+              <>Already have an account?<button onClick={() => switchTab('login')}>Sign in</button></>
+            )}
+          </div>
         </div>
       </div>
     </div>
