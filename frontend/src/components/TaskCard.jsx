@@ -1,4 +1,3 @@
-import React from 'react';
 
 export default function TaskCard({ task, onClick, onDragStart, onDragEnd }) {
   const isOverdue = task.due_date && new Date(task.due_date) < new Date() && task.status !== 'done';

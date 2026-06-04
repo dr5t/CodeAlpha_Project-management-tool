@@ -1,4 +1,3 @@
-import React, { useState } from 'react';
 import AgileSpaceLogo from './AgileSpaceLogo';
 import { Avatar, Icons } from './Avatar';
 

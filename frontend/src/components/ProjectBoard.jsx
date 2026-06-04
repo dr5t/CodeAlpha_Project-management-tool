@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Avatar, Icons } from './Avatar';
+import { useState, useRef, useEffect } from 'react';
+import { Avatar } from './Avatar';
 
 const COLUMNS = [
   { id: 'todo', label: 'To Do', color: '#6b7280' },

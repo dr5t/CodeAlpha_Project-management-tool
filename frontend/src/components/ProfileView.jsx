@@ -1,7 +1,7 @@
-import React, { useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { Avatar, AvatarEditable, Icons, AVATAR_COLORS } from './Avatar';
 
-const BACKEND = 'http://localhost:5001';
+// const BACKEND = 'http://localhost:5001';
 
 export default function ProfileView({ user, API_URL, token, onProfileUpdated, onLogout }) {
   const [tab, setTab] = useState('profile');
