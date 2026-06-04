@@ -1294,3 +1294,46 @@ dialog[open]::backdrop {
 .password-input-wrapper .form-input {
   padding-right: 42px !important;
 }
+
+/* ==================== SPLIT AUTH CARD ==================== */
+.auth-card.split {
+  max-width: 800px;
+  padding: 0;
+  display: flex;
+  overflow: hidden;
+}
+.auth-card-left {
+  width: 320px;
+  background: linear-gradient(135deg, var(--bg-surface) 0%, rgba(99,102,241,0.04) 100%);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  position: relative;
+  flex-shrink: 0;
+}
+.auth-card-right {
+  flex: 1;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .auth-card.split {
+    flex-direction: column;
+    max-width: 420px;
+  }
+  .auth-card-left {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: 30px 20px 20px;
+  }
+  .auth-card-right {
+    padding: 30px 24px;
+  }
+}
