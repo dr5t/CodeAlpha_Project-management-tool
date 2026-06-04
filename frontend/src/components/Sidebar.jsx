@@ -1,4 +1,5 @@
 import React from 'react';
+import AgileSpaceLogo from './AgileSpaceLogo';
 
 export default function Sidebar({
   isCollapsed,
@@ -16,8 +17,8 @@ export default function Sidebar({
       {/* Sidebar Header */}
       <div className="sidebar-header">
         <div className="sidebar-logo">
-          <div className="logo-icon">C</div>
-          {!isCollapsed && <span className="logo-text">CodeAlpha</span>}
+          <AgileSpaceLogo size={26} showBg={false} />
+          {!isCollapsed && <span className="logo-text">AgileSpace</span>}
         </div>
         <button 
           className="sidebar-toggle-btn"
