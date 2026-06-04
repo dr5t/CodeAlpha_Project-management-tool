@@ -1,385 +1,500 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-export default function TaskModal({ 
-  taskId, 
-  onClose, 
-  API_URL, 
-  token, 
-  projectMembers,
-  onTaskUpdated 
-}) {
+const STATUSES = [
+  { id: 'todo', label: 'To Do' },
+  { id: 'in_progress', label: 'In Progress' },
+  { id: 'review', label: 'Review' },
+  { id: 'done', label: 'Done' },
+];
+const PRIORITIES = ['low', 'medium', 'high'];
+
+function timeAgo(dateStr) {
+  if (!dateStr) return '';
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return 'just now';
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
+
+function Avatar({ username, color, size = 28 }) {
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: '50%',
+      background: color || '#6366f1',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontSize: size * 0.38 + 'px', fontWeight: 700, flexShrink: 0
+    }}>
+      {username ? username[0].toUpperCase() : '?'}
+    </div>
+  );
+}
+
+export default function TaskModal({ taskId, onClose, API_URL, token, projectMembers, onTaskUpdated }) {
   const dialogRef = useRef(null);
   const [task, setTask] = useState(null);
-  const [comments, setComments] = useState([]);
-  const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [comments, setComments] = useState([]);
+  const [commentText, setCommentText] = useState('');
+  const [submittingComment, setSubmittingComment] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [error, setError] = useState('');
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
-  // Form edit states
+  // Editable fields
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [priority, setPriority] = useState('medium');
   const [status, setStatus] = useState('todo');
+  const [priority, setPriority] = useState('medium');
   const [dueDate, setDueDate] = useState('');
   const [assigneeId, setAssigneeId] = useState('');
 
-  // Fetch task details and comments
+  // Track dirty state
+  const dirty = task && (
+    title !== (task.title || '') ||
+    description !== (task.description || '') ||
+    status !== task.status ||
+    priority !== task.priority ||
+    dueDate !== (task.due_date ? task.due_date.split('T')[0] : '') ||
+    String(assigneeId) !== String(task.assignee_id || '')
+  );
+
+  // Open dialog on mount
+  useEffect(() => {
+    if (dialogRef.current) dialogRef.current.showModal();
+  }, []);
+
+  // Fetch task details
   useEffect(() => {
     if (!taskId) return;
-
-    const fetchDetails = async () => {
+    const fetchTask = async () => {
       setLoading(true);
       try {
-        const headers = { 'Authorization': `Bearer ${token}` };
-        
-        // 1. Fetch Task Details
-        const taskRes = await fetch(`${API_URL}/tasks/${taskId}`, { headers });
-        if (!taskRes.ok) throw new Error('Failed to load task details');
-        const taskData = await taskRes.json();
-        
-        setTask(taskData);
-        setTitle(taskData.title);
-        setDescription(taskData.description || '');
-        setPriority(taskData.priority || 'medium');
-        setStatus(taskData.status || 'todo');
-        setDueDate(taskData.due_date || '');
-        setAssigneeId(taskData.assignee_id || '');
-
-        // 2. Fetch Comments
-        const commentRes = await fetch(`${API_URL}/comments/${taskId}`, { headers });
-        if (commentRes.ok) {
-          const commentsData = await commentRes.json();
-          setComments(commentsData);
-        }
-
-        // Show native dialog modal
-        if (dialogRef.current && !dialogRef.current.open) {
-          dialogRef.current.showModal();
-        }
+        const [tRes, cRes] = await Promise.all([
+          fetch(`${API_URL}/tasks/${taskId}`, { headers: { Authorization: `Bearer ${token}` } }),
+          fetch(`${API_URL}/comments/task/${taskId}`, { headers: { Authorization: `Bearer ${token}` } }),
+        ]);
+        if (!tRes.ok) throw new Error('Failed to load task');
+        const tData = await tRes.json();
+        const cData = cRes.ok ? await cRes.json() : [];
+        setTask(tData);
+        setTitle(tData.title || '');
+        setDescription(tData.description || '');
+        setStatus(tData.status || 'todo');
+        setPriority(tData.priority || 'medium');
+        setDueDate(tData.due_date ? tData.due_date.split('T')[0] : '');
+        setAssigneeId(tData.assignee_id ? String(tData.assignee_id) : '');
+        setComments(cData);
       } catch (err) {
-        console.error(err.message);
-        handleClose();
+        setError('Could not load task details.');
       } finally {
         setLoading(false);
       }
     };
-
-    fetchDetails();
+    fetchTask();
   }, [taskId]);
 
-  // Listen for WebSocket comment additions (or task updates) while modal is open
+  // Listen for live WebSocket updates to refresh comments
   useEffect(() => {
-    if (!taskId) return;
-
-    const handleSocketMessage = (e) => {
+    const handler = (e) => {
       try {
-        const message = JSON.parse(e.data);
-        if (message.type === 'COMMENT_ADDED' && Number(message.taskId) === Number(taskId)) {
-          // Prepend/append new comment if not already present
-          setComments(prev => {
-            if (prev.some(c => c.id === message.comment.id)) return prev;
-            return [...prev, message.comment];
-          });
-        } else if (message.type === 'TASK_UPDATED' && Number(message.taskId) === Number(taskId)) {
-          // Sync live modifications (excluding fields current user might be editing)
-          setTask(message.task);
+        const msg = JSON.parse(e.data);
+        if (msg.type === 'BOARD_UPDATED') {
+          // Re-fetch comments silently
+          fetch(`${API_URL}/comments/task/${taskId}`, { headers: { Authorization: `Bearer ${token}` } })
+            .then(r => r.ok ? r.json() : null)
+            .then(d => { if (d) setComments(d); });
         }
-      } catch (err) {
-        console.error('Socket message parse error in TaskModal:', err);
-      }
+      } catch {}
     };
-
-    window.addEventListener('websocket-message', handleSocketMessage);
-    return () => window.removeEventListener('websocket-message', handleSocketMessage);
+    window.addEventListener('websocket-message', handler);
+    return () => window.removeEventListener('websocket-message', handler);
   }, [taskId]);
 
-  const handleClose = () => {
-    if (dialogRef.current) {
-      dialogRef.current.close();
-    }
-    // Give 250ms for fade out transition, then trigger parent onClose
-    setTimeout(() => {
-      onClose();
-    }, 250);
-  };
-
-  // Sync changes to backend
-  const handleUpdate = async (updatedFields) => {
+  const handleSave = async () => {
+    if (!title.trim()) { setError('Title is required.'); return; }
+    setSaving(true); setError('');
     try {
-      const headers = {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      };
-      
-      const payload = {
-        title: updatedFields.hasOwnProperty('title') ? updatedFields.title : title,
-        description: updatedFields.hasOwnProperty('description') ? updatedFields.description : description,
-        priority: updatedFields.hasOwnProperty('priority') ? updatedFields.priority : priority,
-        status: updatedFields.hasOwnProperty('status') ? updatedFields.status : status,
-        due_date: updatedFields.hasOwnProperty('due_date') ? updatedFields.due_date : dueDate,
-        assignee_id: updatedFields.hasOwnProperty('assignee_id') ? updatedFields.assignee_id : assigneeId
-      };
-
       const res = await fetch(`${API_URL}/tasks/${taskId}`, {
         method: 'PUT',
-        headers,
-        body: JSON.stringify(payload)
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          title: title.trim(),
+          description: description.trim(),
+          status, priority,
+          due_date: dueDate || null,
+          assignee_id: assigneeId ? Number(assigneeId) : null
+        })
       });
-
-      if (!res.ok) throw new Error('Failed to update task');
-      const data = await res.json();
-      
-      setTask(data);
-      if (onTaskUpdated) onTaskUpdated(data);
+      if (!res.ok) throw new Error('Save failed');
+      const updated = await res.json();
+      setTask(updated);
+      onTaskUpdated(updated);
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2000);
     } catch (err) {
-      console.error('Error updating task:', err);
+      setError(err.message);
+    } finally {
+      setSaving(false);
     }
   };
 
-  const handleCommentSubmit = async (e) => {
-    e.preventDefault();
-    if (!newComment.trim()) return;
-
-    try {
-      const res = await fetch(`${API_URL}/comments/${taskId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ content: newComment.trim() })
-      });
-
-      if (!res.ok) throw new Error('Failed to post comment');
-      const data = await res.json();
-
-      setComments(prev => [...prev, data]);
-      setNewComment('');
-      
-      // Update task comment count badge locally
-      if (task) {
-        const updatedTask = { ...task, comment_count: (task.comment_count || 0) + 1 };
-        setTask(updatedTask);
-        if (onTaskUpdated) onTaskUpdated(updatedTask);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const handleDeleteTask = async () => {
-    if (!window.confirm('Are you sure you want to delete this task?')) return;
+  const handleDelete = async () => {
     try {
       const res = await fetch(`${API_URL}/tasks/${taskId}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` }
       });
-      if (!res.ok) throw new Error('Failed to delete task');
-      
-      if (onTaskUpdated) onTaskUpdated({ id: taskId, deleted: true });
+      if (!res.ok) throw new Error('Delete failed');
+      onTaskUpdated({ id: taskId, deleted: true });
       handleClose();
     } catch (err) {
-      console.error(err);
+      setError(err.message);
+      setDeleteConfirmOpen(false);
     }
   };
 
-  if (!taskId) return null;
+  const handleAddComment = async () => {
+    if (!commentText.trim()) return;
+    setSubmittingComment(true);
+    try {
+      const res = await fetch(`${API_URL}/comments/task/${taskId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ content: commentText.trim() })
+      });
+      if (!res.ok) throw new Error('Comment failed');
+      const newComment = await res.json();
+      setComments(prev => [...prev, newComment]);
+      setCommentText('');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSubmittingComment(false);
+    }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    try {
+      await fetch(`${API_URL}/comments/${commentId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setComments(prev => prev.filter(c => c.id !== commentId));
+    } catch {}
+  };
+
+  const handleClose = () => {
+    if (dialogRef.current) dialogRef.current.close();
+    onClose();
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Escape') handleClose();
+  };
+
+  const priorityColors = { low: 'var(--blue)', medium: 'var(--amber)', high: 'var(--red)' };
+  const memberOptions = projectMembers || [];
+  const selectedAssignee = memberOptions.find(m => String(m.user_id || m.id) === String(assigneeId));
 
   return (
-    <dialog ref={dialogRef} className="modal-wrapper large" onClose={handleClose}>
-      <button className="modal-close-btn" onClick={handleClose}>
-        <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
-
-      {loading ? (
-        <div style={{ gridColumn: 'span 2', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '300px' }}>
-          Loading task details...
-        </div>
-      ) : (
-        <>
-          {/* Main Details and Comments */}
-          <div className="task-details-main">
-            <div style={{ marginBottom: '15px' }}>
-              <input
-                type="text"
-                className="form-input"
-                style={{ 
-                  fontSize: '1.25rem', 
-                  fontWeight: '600', 
-                  border: 'none', 
-                  background: 'transparent', 
-                  padding: '4px 0',
-                  borderBottom: '1px solid transparent'
-                }}
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                onBlur={() => handleUpdate({ title })}
-                placeholder="Task Title"
-              />
+    <dialog
+      ref={dialogRef}
+      id="task-detail-dialog"
+      onClose={onClose}
+      onKeyDown={handleKeyDown}
+      style={{ maxWidth: '900px', width: '90vw' }}
+    >
+      <div className="modal-box two-col" style={{ maxHeight: '90vh' }}>
+        {/* ── LEFT COLUMN ── */}
+        <div className="modal-col-main">
+          {loading ? (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+              <div className="loading-spinner" style={{ width: 32, height: 32 }} />
             </div>
-
-            {/* Description */}
-            <div>
-              <h4 className="details-label">Description</h4>
-              <textarea
-                className="details-textarea"
-                placeholder="Add a detailed description for this task..."
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                onBlur={() => handleUpdate({ description })}
-              />
-            </div>
-
-            {/* Comments Thread */}
-            <div className="comments-container">
-              <h4 className="details-label" style={{ marginBottom: '15px' }}>Activity & Comments</h4>
-              
-              <form onSubmit={handleCommentSubmit} className="comment-input-box">
-                <textarea
-                  className="comment-field"
-                  placeholder="Write a comment..."
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
+          ) : (
+            <>
+              {/* Header */}
+              <div className="modal-header">
+                <input
+                  id="task-title-input"
+                  className="modal-title-input"
+                  value={title}
+                  onChange={e => setTitle(e.target.value)}
+                  placeholder="Task title…"
                 />
-                <button type="submit" className="comment-submit-btn">Post</button>
-              </form>
+                <button id="task-modal-close" className="btn btn-ghost btn-icon" onClick={handleClose} title="Close">
+                  <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                {comments.map((c) => (
-                  <div key={c.id} className="comment-item">
-                    <div 
-                      className="avatar" 
-                      style={{ 
-                        backgroundColor: c.avatar_color || '#6366f1',
-                        width: '28px',
-                        height: '28px',
-                        fontSize: '0.8rem'
-                      }}
-                    >
-                      {c.username.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="comment-bubble">
-                      <div className="comment-header-row">
-                        <span className="comment-author">{c.username}</span>
-                        <span className="comment-time">
-                          {new Date(c.created_at).toLocaleDateString(undefined, { 
-                            month: 'short', 
-                            day: 'numeric',
-                            hour: '2-digit', 
-                            minute: '2-digit'
-                          })}
-                        </span>
-                      </div>
-                      <p className="comment-content">{c.content}</p>
-                    </div>
-                  </div>
-                ))}
-                {comments.length === 0 && (
-                  <div style={{ textAlign: 'center', color: 'var(--text-disabled)', padding: '20px 0', fontSize: '0.8rem' }}>
-                    No comments yet. Be the first to start the conversation!
+              {error && (
+                <div className="error-banner" style={{ marginBottom: 12 }}>
+                  <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" /><path strokeLinecap="round" d="M12 8v4m0 4h.01" />
+                  </svg>
+                  {error}
+                </div>
+              )}
+
+              {/* Scrollable body */}
+              <div className="modal-body-scroll">
+                {/* Description */}
+                <div className="detail-group">
+                  <label className="detail-label" htmlFor="task-desc">Description</label>
+                  <textarea
+                    id="task-desc"
+                    className="detail-textarea"
+                    placeholder="Add a detailed description…"
+                    value={description}
+                    onChange={e => setDescription(e.target.value)}
+                    rows={4}
+                  />
+                </div>
+
+                {/* Save action bar */}
+                {dirty && (
+                  <div style={{
+                    display: 'flex', gap: 8, alignItems: 'center',
+                    padding: '10px 14px',
+                    background: 'var(--primary-subtle)',
+                    border: '1px solid var(--border-active)',
+                    borderRadius: 'var(--radius-sm)',
+                    animation: 'fadeIn 0.2s var(--ease) both'
+                  }}>
+                    <span style={{ fontSize: '0.82rem', color: 'var(--text-2)', flex: 1 }}>You have unsaved changes</span>
+                    <button id="task-discard" className="btn btn-ghost btn-sm" onClick={() => {
+                      setTitle(task.title || '');
+                      setDescription(task.description || '');
+                      setStatus(task.status || 'todo');
+                      setPriority(task.priority || 'medium');
+                      setDueDate(task.due_date ? task.due_date.split('T')[0] : '');
+                      setAssigneeId(task.assignee_id ? String(task.assignee_id) : '');
+                      setError('');
+                    }}>Discard</button>
+                    <button id="task-save" className="btn btn-primary btn-sm" onClick={handleSave} disabled={saving}>
+                      {saving ? 'Saving…' : 'Save Changes'}
+                    </button>
                   </div>
                 )}
-              </div>
-            </div>
-          </div>
 
-          {/* Sidebar Controls */}
-          <div className="task-details-sidebar">
-            {/* Status */}
-            <div>
-              <h4 className="details-label">Status</h4>
-              <div className="select-wrapper">
-                <select 
-                  className="select-dropdown" 
-                  value={status} 
-                  onChange={(e) => {
-                    setStatus(e.target.value);
-                    handleUpdate({ status: e.target.value });
-                  }}
-                >
-                  <option value="todo">To Do</option>
-                  <option value="in_progress">In Progress</option>
-                  <option value="review">Review</option>
-                  <option value="done">Completed</option>
-                </select>
-              </div>
-            </div>
+                {saveSuccess && (
+                  <div className="success-banner">✅ Task saved successfully</div>
+                )}
 
-            {/* Priority */}
-            <div>
-              <h4 className="details-label">Priority</h4>
-              <div className="select-wrapper">
-                <select 
-                  className="select-dropdown" 
-                  value={priority} 
-                  onChange={(e) => {
-                    setPriority(e.target.value);
-                    handleUpdate({ priority: e.target.value });
-                  }}
-                >
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                </select>
-              </div>
-            </div>
+                {/* Comments */}
+                <div className="comments-area">
+                  <div className="comments-heading">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                    </svg>
+                    Comments ({comments.length})
+                  </div>
 
-            {/* Assignee */}
-            <div>
-              <h4 className="details-label">Assignee</h4>
-              <div className="select-wrapper">
-                <select 
-                  className="select-dropdown" 
-                  value={assigneeId} 
-                  onChange={(e) => {
-                    const val = e.target.value ? Number(e.target.value) : '';
-                    setAssigneeId(val);
-                    handleUpdate({ assignee_id: val });
-                  }}
+                  <div className="comment-compose">
+                    <textarea
+                      id="comment-input"
+                      className="comment-input"
+                      placeholder="Write a comment… (Enter to submit)"
+                      value={commentText}
+                      onChange={e => setCommentText(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleAddComment();
+                        }
+                      }}
+                      rows={2}
+                    />
+                    <button
+                      id="btn-add-comment"
+                      className="btn btn-primary btn-icon"
+                      style={{ alignSelf: 'flex-end', width: 38, height: 38 }}
+                      onClick={handleAddComment}
+                      disabled={!commentText.trim() || submittingComment}
+                      title="Post comment"
+                    >
+                      <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  {comments.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '20px 0', fontSize: '0.82rem', color: 'var(--text-3)' }}>
+                      No comments yet. Be the first!
+                    </div>
+                  ) : (
+                    comments.map(c => (
+                      <div key={c.id} className="comment-item" id={`comment-${c.id}`}>
+                        <Avatar username={c.username || c.author} color={c.avatar_color} size={30} />
+                        <div className="comment-bubble" style={{ flex: 1 }}>
+                          <div className="comment-meta">
+                            <span className="comment-author">{c.username || c.author}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <span className="comment-time">{timeAgo(c.created_at)}</span>
+                              <button
+                                id={`delete-comment-${c.id}`}
+                                className="btn btn-ghost btn-icon-sm"
+                                style={{ opacity: 0.5 }}
+                                title="Delete comment"
+                                onClick={() => handleDeleteComment(c.id)}
+                              >
+                                <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+                          <div className="comment-body">{c.content || c.body}</div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* ── RIGHT SIDEBAR ── */}
+        <div className="modal-col-side">
+          {!loading && (
+            <>
+              <div className="detail-group">
+                <label className="detail-label" htmlFor="task-status-select">Status</label>
+                <select
+                  id="task-status-select"
+                  className="detail-select"
+                  value={status}
+                  onChange={e => setStatus(e.target.value)}
                 >
-                  <option value="">Unassigned</option>
-                  {projectMembers.map(m => (
-                    <option key={m.id} value={m.id}>{m.username}</option>
+                  {STATUSES.map(s => (
+                    <option key={s.id} value={s.id}>{s.label}</option>
                   ))}
                 </select>
               </div>
-            </div>
 
-            {/* Due Date */}
-            <div>
-              <h4 className="details-label">Due Date</h4>
-              <input
-                type="date"
-                className="form-input"
-                style={{ padding: '8px 10px', fontSize: '0.85rem' }}
-                value={dueDate}
-                onChange={(e) => {
-                  setDueDate(e.target.value);
-                  handleUpdate({ due_date: e.target.value });
-                }}
-              />
-            </div>
+              <div className="detail-group">
+                <label className="detail-label" htmlFor="task-priority-select">Priority</label>
+                <select
+                  id="task-priority-select"
+                  className="detail-select"
+                  value={priority}
+                  onChange={e => setPriority(e.target.value)}
+                >
+                  {PRIORITIES.map(p => (
+                    <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>
+                  ))}
+                </select>
+                <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{
+                    width: 8, height: 8, borderRadius: '50%',
+                    background: priorityColors[priority]
+                  }} />
+                  <span style={{ fontSize: '0.78rem', color: priorityColors[priority] }}>
+                    {priority.charAt(0).toUpperCase() + priority.slice(1)} priority
+                  </span>
+                </div>
+              </div>
 
-            {/* Delete Card */}
-            <div style={{ marginTop: 'auto', paddingTop: '20px' }}>
-              <button 
-                className="action-btn btn-secondary" 
-                style={{ 
-                  width: '100%', 
-                  color: 'var(--priority-high)', 
-                  borderColor: 'rgba(239,68,68,0.2)',
-                  display: 'flex',
-                  justifyContent: 'center'
-                }}
-                onClick={handleDeleteTask}
-              >
-                Delete Card
-              </button>
-            </div>
-          </div>
-        </>
-      )}
+              <div className="detail-group">
+                <label className="detail-label" htmlFor="task-due-date">Due Date</label>
+                <input
+                  id="task-due-date"
+                  type="date"
+                  className="detail-select"
+                  value={dueDate}
+                  onChange={e => setDueDate(e.target.value)}
+                  style={{ colorScheme: 'dark' }}
+                />
+                {dueDate && (
+                  <button
+                    id="clear-due-date"
+                    className="btn btn-ghost btn-sm"
+                    style={{ marginTop: 6, fontSize: '0.75rem', padding: '4px 8px' }}
+                    onClick={() => setDueDate('')}
+                  >
+                    Clear date
+                  </button>
+                )}
+              </div>
+
+              <div className="detail-group">
+                <label className="detail-label" htmlFor="task-assignee-select">Assignee</label>
+                <select
+                  id="task-assignee-select"
+                  className="detail-select"
+                  value={assigneeId}
+                  onChange={e => setAssigneeId(e.target.value)}
+                >
+                  <option value="">Unassigned</option>
+                  {memberOptions.map(m => (
+                    <option key={m.user_id || m.id} value={m.user_id || m.id}>
+                      {m.username}
+                    </option>
+                  ))}
+                </select>
+                {selectedAssignee && (
+                  <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Avatar username={selectedAssignee.username} color={selectedAssignee.avatar_color} size={24} />
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-2)' }}>{selectedAssignee.username}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Task metadata */}
+              {task && (
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16 }}>
+                  <div className="detail-label" style={{ marginBottom: 10 }}>Created</div>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-2)' }}>
+                    {task.created_at ? new Date(task.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '—'}
+                  </div>
+                </div>
+              )}
+
+              {/* Delete task */}
+              <div style={{ marginTop: 'auto', paddingTop: 12, borderTop: '1px solid var(--border)' }}>
+                {!deleteConfirmOpen ? (
+                  <button
+                    id="btn-delete-task"
+                    className="btn btn-danger btn-full btn-sm"
+                    onClick={() => setDeleteConfirmOpen(true)}
+                  >
+                    <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M4 7h16M10 3h4"/>
+                    </svg>
+                    Delete Task
+                  </button>
+                ) : (
+                  <div style={{
+                    background: 'var(--red-bg)', border: '1px solid rgba(248,113,113,0.3)',
+                    borderRadius: 'var(--radius-sm)', padding: 12,
+                    animation: 'fadeInScale 0.2s var(--ease-spring) both'
+                  }}>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--red)', marginBottom: 10, fontWeight: 500 }}>
+                      Are you sure? This cannot be undone.
+                    </p>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button id="confirm-delete-task" className="btn btn-danger btn-sm btn-full" onClick={handleDelete}>
+                        Yes, Delete
+                      </button>
+                      <button id="cancel-delete-task" className="btn btn-ghost btn-sm btn-full" onClick={() => setDeleteConfirmOpen(false)}>
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
     </dialog>
   );
 }
