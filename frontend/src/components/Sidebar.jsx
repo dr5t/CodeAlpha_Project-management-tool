@@ -1,109 +1,159 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import AgileSpaceLogo from './AgileSpaceLogo';
 
-export default function Sidebar({
-  isCollapsed,
-  setIsCollapsed,
-  currentView,
-  setCurrentView,
-  projects,
-  currentProject,
-  setCurrentProject,
-  user,
-  onLogout
-}) {
+const AVATAR_COLORS = [
+  '#6366f1','#8b5cf6','#ec4899','#ef4444','#f59e0b',
+  '#10b981','#06b6d4','#3b82f6','#84cc16','#14b8a6'
+];
+
+function Avatar({ user, size = 'md', onClick, style = {} }) {
+  const sizeClass = size === 'sm' ? 'avatar-sm' : size === 'lg' ? 'avatar-lg' : size === 'xl' ? 'avatar-xl' : 'avatar-md';
+  const letter = user?.username ? user.username[0].toUpperCase() : '?';
   return (
-    <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
-      {/* Sidebar Header */}
-      <div className="sidebar-header">
-        <div className="sidebar-logo">
-          <AgileSpaceLogo size={26} showBg={false} />
-          {!isCollapsed && <span className="logo-text">AgileSpace</span>}
-        </div>
-        <button 
-          className="sidebar-toggle-btn"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-        >
-          {isCollapsed ? (
-            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-            </svg>
-          ) : (
-            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M11 19l-7-7 7-7M19 19l-7-7 7-7" />
-            </svg>
-          )}
-        </button>
+    <div
+      className={`avatar ${sizeClass}`}
+      style={{ background: user?.avatar_color || '#6366f1', ...style }}
+      onClick={onClick}
+      title={user?.username}
+    >
+      {letter}
+    </div>
+  );
+}
+
+const NAV = [
+  { id: 'dashboard', label: 'Dashboard', icon: (
+    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+      <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+      <rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+    </svg>
+  )},
+  { id: 'profile', label: 'My Profile', icon: (
+    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+      <circle cx="12" cy="8" r="4"/><path strokeLinecap="round" d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+    </svg>
+  )},
+  { id: 'settings', label: 'Settings', icon: (
+    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="3"/>
+      <path strokeLinecap="round" d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>
+  )},
+];
+
+export default function Sidebar({ isCollapsed, setIsCollapsed, currentView, setCurrentView, projects, currentProject, setCurrentProject, user, onLogout, onProfileUpdate }) {
+  const [hovered, setHovered] = useState(null);
+
+  const navView = (id) => {
+    setCurrentView(id);
+    if (id !== 'board') setCurrentProject(null);
+  };
+
+  const effectiveView = currentProject ? (currentView === 'board' ? 'board' : currentView) : currentView;
+
+  return (
+    <aside className={`sidebar${isCollapsed ? ' collapsed' : ''}`} id="app-sidebar">
+      {/* Brand */}
+      <div className="sidebar-brand">
+        <AgileSpaceLogo size={32} />
+        <span className="brand-name">AgileSpace</span>
       </div>
 
-      {/* Navigation Links */}
-      <nav className="sidebar-nav">
-        <div 
-          className={`sidebar-item ${currentView === 'dashboard' ? 'active' : ''}`}
-          onClick={() => {
-            setCurrentView('dashboard');
-            setCurrentProject(null);
-          }}
-        >
-          <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" />
-          </svg>
-          <span>Dashboard</span>
-        </div>
-
-        {/* Projects Section */}
-        {!isCollapsed && <div className="sidebar-section-title">Projects</div>}
-        
-        {projects.map((project) => (
-          <div 
-            key={project.id}
-            className={`sidebar-item ${currentProject && currentProject.id === project.id ? 'active' : ''}`}
-            onClick={() => {
-              setCurrentProject(project);
-              setCurrentView('board');
-            }}
-            title={project.name}
+      {/* Scroll nav area */}
+      <nav className="sidebar-scroll">
+        {NAV.map(item => (
+          <button
+            key={item.id}
+            id={`nav-${item.id}`}
+            className={`nav-item${effectiveView === item.id ? ' active' : ''}`}
+            onClick={() => navView(item.id)}
+            title={isCollapsed ? item.label : undefined}
           >
-            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-            </svg>
-            <span>{project.name}</span>
-          </div>
+            {item.icon}
+            <span className="nav-label">{item.label}</span>
+          </button>
         ))}
-        
+
+        {/* Projects section */}
+        <div className="nav-section-label">Projects</div>
+
         {projects.length === 0 && !isCollapsed && (
-          <div style={{ padding: '10px 14px', fontSize: '0.8rem', color: 'var(--text-disabled)', fontStyle: 'italic' }}>
-            No projects created.
+          <div style={{ padding: '8px 12px', fontSize: '0.78rem', color: 'var(--text-3)' }}>
+            No projects yet
           </div>
         )}
+
+        {projects.map(proj => (
+          <button
+            key={proj.id}
+            id={`sidebar-proj-${proj.id}`}
+            className={`nav-item${currentProject?.id === proj.id && effectiveView === 'board' ? ' active' : ''}`}
+            onClick={() => { setCurrentProject(proj); setCurrentView('board'); }}
+            title={isCollapsed ? proj.name : undefined}
+            onMouseEnter={() => setHovered(proj.id)}
+            onMouseLeave={() => setHovered(null)}
+          >
+            <div style={{
+              width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
+              background: proj.owner_id === user?.id ? 'var(--primary)' : 'var(--accent)'
+            }} />
+            <span className="nav-label">{proj.name}</span>
+            {!isCollapsed && proj.total_tasks > 0 && (
+              <span className="nav-item-count">{proj.total_tasks}</span>
+            )}
+          </button>
+        ))}
       </nav>
 
-      {/* User Section at bottom */}
-      {user && (
-        <div className="sidebar-user">
-          <div className="user-badge">
-            <div className="avatar" style={{ backgroundColor: user.avatar_color || '#6366f1' }}>
-              {(user.username || 'U').charAt(0).toUpperCase()}
-            </div>
-            {!isCollapsed && (
-              <div className="user-info">
-                <span className="user-name">{user.username}</span>
-                <span className="user-email">{user.email}</span>
-              </div>
-            )}
+      {/* User Footer */}
+      <div className="sidebar-footer">
+        <div className="user-card" onClick={() => navView('profile')} id="sidebar-user-card" title="My Profile">
+          <Avatar user={user} size="sm" style={{ pointerEvents: 'none' }} />
+          <div className="user-info-text">
+            <div className="user-name-text">{user?.username}</div>
+            <div className="user-email-text">{user?.email}</div>
           </div>
-          <button 
-            className="logout-btn"
-            onClick={onLogout}
-            title="Log Out"
+          {!isCollapsed && (
+            <button
+              id="sidebar-collapse-btn"
+              className="btn btn-ghost btn-icon-sm sidebar-collapse-btn"
+              onClick={(e) => { e.stopPropagation(); setIsCollapsed(!isCollapsed); }}
+              title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            >
+              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+          )}
+        </div>
+        {isCollapsed && (
+          <button
+            id="sidebar-expand-btn"
+            className="btn btn-ghost btn-icon"
+            style={{ width: '100%', marginTop: 4 }}
+            onClick={() => setIsCollapsed(false)}
+            title="Expand sidebar"
           >
-            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
             </svg>
           </button>
-        </div>
-      )}
+        )}
+        <button
+          id="sidebar-logout-btn"
+          className="btn btn-ghost"
+          style={{ width: '100%', marginTop: 6, fontSize: '0.8rem', color: 'var(--text-2)', justifyContent: isCollapsed ? 'center' : 'flex-start', padding: '8px 10px' }}
+          onClick={onLogout}
+          title="Sign out"
+        >
+          <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+          </svg>
+          <span className="nav-label">Sign out</span>
+        </button>
+      </div>
     </aside>
   );
 }
+
+export { Avatar, AVATAR_COLORS };
