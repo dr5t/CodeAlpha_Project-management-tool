@@ -190,4 +190,57 @@ router.post('/:id/members', authenticateToken, async (req, res) => {
   }
 });
 
+// PUT /projects/:id - Update project name/description (owner only)
+router.put('/:id', authenticateToken, async (req, res) => {
+  const projectId = req.params.id;
+  const { name, description } = req.body;
+  if (!name) return res.status(400).json({ error: 'Project name is required' });
+
+  try {
+    const project = await query.get('SELECT owner_id FROM projects WHERE id = ?', [projectId]);
+    if (!project) return res.status(404).json({ error: 'Project not found' });
+    if (project.owner_id !== req.user.id) return res.status(403).json({ error: 'Only the owner can edit this project' });
+
+    await query.run('UPDATE projects SET name = ?, description = ? WHERE id = ?',
+      [name.trim(), description ? description.trim() : '', projectId]);
+
+    res.json({ id: projectId, name: name.trim(), description: description || '' });
+  } catch (err) {
+    console.error('Error updating project:', err);
+    res.status(500).json({ error: 'Server error updating project' });
+  }
+});
+
+// DELETE /projects/:id - Delete project (owner only)
+router.delete('/:id', authenticateToken, async (req, res) => {
+  const projectId = req.params.id;
+  try {
+    const project = await query.get('SELECT owner_id FROM projects WHERE id = ?', [projectId]);
+    if (!project) return res.status(404).json({ error: 'Project not found' });
+    if (project.owner_id !== req.user.id) return res.status(403).json({ error: 'Only the owner can delete this project' });
+
+    await query.run('DELETE FROM projects WHERE id = ?', [projectId]);
+    res.json({ message: 'Project deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting project:', err);
+    res.status(500).json({ error: 'Server error deleting project' });
+  }
+});
+
+// DELETE /projects/:id/members/:userId - Remove member
+router.delete('/:id/members/:userId', authenticateToken, async (req, res) => {
+  const { id: projectId, userId } = req.params;
+  try {
+    const project = await query.get('SELECT owner_id FROM projects WHERE id = ?', [projectId]);
+    if (!project) return res.status(404).json({ error: 'Project not found' });
+    if (project.owner_id !== req.user.id) return res.status(403).json({ error: 'Only the owner can remove members' });
+    if (project.owner_id === Number(userId)) return res.status(400).json({ error: 'Cannot remove project owner' });
+
+    await query.run('DELETE FROM project_members WHERE project_id = ? AND user_id = ?', [projectId, userId]);
+    res.json({ message: 'Member removed' });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 module.exports = router;

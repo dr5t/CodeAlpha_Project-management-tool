@@ -127,7 +127,7 @@ router.get('/me', authenticateToken, async (req, res) => {
   }
 });
 
-// List all system users (useful for assigning tasks or inviting members)
+// List all system users
 router.get('/users', authenticateToken, async (req, res) => {
   try {
     const usersList = await query.all(
@@ -136,6 +136,72 @@ router.get('/users', authenticateToken, async (req, res) => {
     res.json(usersList);
   } catch (err) {
     res.status(500).json({ error: 'Server error loading user list' });
+  }
+});
+
+// Update profile (username, email, avatar_color)
+router.put('/profile', authenticateToken, async (req, res) => {
+  const { username, email, avatar_color } = req.body;
+  if (!username || !email) return res.status(400).json({ error: 'Username and email are required' });
+
+  try {
+    // Check uniqueness excluding current user
+    const conflict = await query.get(
+      'SELECT id FROM users WHERE (email = ? OR username = ?) AND id != ?',
+      [email.toLowerCase().trim(), username.toLowerCase().trim(), req.user.id]
+    );
+    if (conflict) return res.status(400).json({ error: 'Username or email already taken' });
+
+    await query.run(
+      'UPDATE users SET username = ?, email = ?, avatar_color = ? WHERE id = ?',
+      [username.toLowerCase().trim(), email.toLowerCase().trim(), avatar_color || '#6366f1', req.user.id]
+    );
+
+    const updated = await query.get(
+      'SELECT id, username, email, avatar_color FROM users WHERE id = ?',
+      [req.user.id]
+    );
+
+    const newToken = require('jsonwebtoken').sign(
+      { id: updated.id, username: updated.username, email: updated.email, avatar_color: updated.avatar_color },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.json({ user: updated, token: newToken });
+  } catch (err) {
+    console.error('Profile update error:', err);
+    res.status(500).json({ error: 'Server error updating profile' });
+  }
+});
+
+// Change password
+router.patch('/profile/password', authenticateToken, async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  if (!currentPassword || !newPassword) return res.status(400).json({ error: 'Both passwords required' });
+  if (newPassword.length < 6) return res.status(400).json({ error: 'New password must be at least 6 characters' });
+
+  try {
+    const userRow = await query.get('SELECT password_hash FROM users WHERE id = ?', [req.user.id]);
+    const isMatch = await bcrypt.compare(currentPassword, userRow.password_hash);
+    if (!isMatch) return res.status(400).json({ error: 'Current password is incorrect' });
+
+    const newHash = await bcrypt.hash(newPassword, 10);
+    await query.run('UPDATE users SET password_hash = ? WHERE id = ?', [newHash, req.user.id]);
+    res.json({ message: 'Password updated successfully' });
+  } catch (err) {
+    console.error('Password change error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Delete account
+router.delete('/profile', authenticateToken, async (req, res) => {
+  try {
+    await query.run('DELETE FROM users WHERE id = ?', [req.user.id]);
+    res.json({ message: 'Account deleted' });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
