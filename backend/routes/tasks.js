@@ -115,7 +115,29 @@ router.post('/project/:projectId', authenticateToken, async (req, res) => {
   }
 });
 
-// PUT /tasks/:id - Update task details
+// GET /tasks/:id - Fetch single task by ID
+router.get('/:id', authenticateToken, async (req, res) => {
+  const taskId = req.params.id;
+  try {
+    const task = await query.get(`
+      SELECT t.id, t.project_id, t.title, t.description, t.status, t.priority, t.due_date,
+             t.assignee_id, t.position, t.created_at,
+             u.username as assignee_username, u.avatar_color as assignee_color,
+             (SELECT COUNT(*) FROM comments c WHERE c.task_id = t.id) as comment_count
+      FROM tasks t
+      LEFT JOIN users u ON t.assignee_id = u.id
+      WHERE t.id = ?
+    `, [taskId]);
+
+    if (!task) return res.status(404).json({ error: 'Task not found' });
+    res.json(task);
+  } catch (err) {
+    console.error('Error fetching task:', err);
+    res.status(500).json({ error: 'Server error fetching task' });
+  }
+});
+
+
 router.put('/:id', authenticateToken, async (req, res) => {
   const taskId = req.params.id;
   const { title, description, status, priority, due_date, assignee_id } = req.body;
