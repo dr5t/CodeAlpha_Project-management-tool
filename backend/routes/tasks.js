@@ -20,7 +20,7 @@ router.get('/project/:projectId', authenticateToken, async (req, res) => {
 
     const tasks = await query.all(`
       SELECT t.id, t.project_id, t.title, t.description, t.status, t.priority, t.due_date, t.assignee_id, t.position, t.created_at,
-             u.username as assignee_name, u.avatar_color as assignee_color,
+             u.username as assignee_name, u.avatar_color as assignee_color, u.avatar_url as assignee_avatar_url,
              (SELECT COUNT(*) FROM comments c WHERE c.task_id = t.id) as comment_count
       FROM tasks t
       LEFT JOIN users u ON t.assignee_id = u.id
@@ -75,7 +75,7 @@ router.post('/project/:projectId', authenticateToken, async (req, res) => {
     // Fetch newly created task with assignee name
     const newTask = await query.get(`
       SELECT t.id, t.project_id, t.title, t.description, t.status, t.priority, t.due_date, t.assignee_id, t.position, t.created_at,
-             u.username as assignee_name, u.avatar_color as assignee_color, 0 as comment_count
+             u.username as assignee_name, u.avatar_color as assignee_color, u.avatar_url as assignee_avatar_url, 0 as comment_count
       FROM tasks t
       LEFT JOIN users u ON t.assignee_id = u.id
       WHERE t.id = ?
@@ -122,7 +122,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
     const task = await query.get(`
       SELECT t.id, t.project_id, t.title, t.description, t.status, t.priority, t.due_date,
              t.assignee_id, t.position, t.created_at,
-             u.username as assignee_username, u.avatar_color as assignee_color,
+             u.username as assignee_username, u.avatar_color as assignee_color, u.avatar_url as assignee_avatar_url,
              (SELECT COUNT(*) FROM comments c WHERE c.task_id = t.id) as comment_count
       FROM tasks t
       LEFT JOIN users u ON t.assignee_id = u.id
@@ -178,7 +178,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
     // Fetch updated task
     const updatedTask = await query.get(`
       SELECT t.id, t.project_id, t.title, t.description, t.status, t.priority, t.due_date, t.assignee_id, t.position, t.created_at,
-             u.username as assignee_name, u.avatar_color as assignee_color,
+             u.username as assignee_name, u.avatar_color as assignee_color, u.avatar_url as assignee_avatar_url,
              (SELECT COUNT(*) FROM comments c WHERE c.task_id = t.id) as comment_count
       FROM tasks t
       LEFT JOIN users u ON t.assignee_id = u.id

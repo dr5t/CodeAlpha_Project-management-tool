@@ -30,7 +30,7 @@ router.get('/', authenticateToken, async (req, res) => {
       project.completed_tasks = stats.completed_tasks || 0;
 
       const members = await query.all(`
-        SELECT pm.user_id, u.username, u.avatar_color
+        SELECT pm.user_id, u.username, u.avatar_color, u.avatar_url
         FROM project_members pm
         JOIN users u ON pm.user_id = u.id
         WHERE pm.project_id = ?
@@ -72,7 +72,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
 
     // Load members
     const members = await query.all(`
-      SELECT u.id, u.username, u.email, u.avatar_color
+      SELECT u.id, u.username, u.email, u.avatar_color, u.avatar_url
       FROM project_members pm
       JOIN users u ON pm.user_id = u.id
       WHERE pm.project_id = ?
@@ -181,7 +181,7 @@ router.post('/:id/members', authenticateToken, async (req, res) => {
     sendNotificationToUser(userId, notificationObj);
 
     // Fetch updated user info to return
-    const memberInfo = await query.get('SELECT id, username, email, avatar_color FROM users WHERE id = ?', [userId]);
+    const memberInfo = await query.get('SELECT id, username, email, avatar_color, avatar_url FROM users WHERE id = ?', [userId]);
 
     res.status(201).json(memberInfo);
   } catch (err) {

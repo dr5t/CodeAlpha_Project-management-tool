@@ -10,7 +10,7 @@ router.get('/task/:taskId', authenticateToken, async (req, res) => {
   try {
     const comments = await query.all(`
       SELECT c.id, c.task_id, c.user_id, c.content, c.created_at,
-             u.username, u.avatar_color
+             u.username, u.avatar_color, u.avatar_url
       FROM comments c
       JOIN users u ON c.user_id = u.id
       WHERE c.task_id = ?
@@ -40,7 +40,7 @@ router.post('/task/:taskId', authenticateToken, async (req, res) => {
 
     const newComment = await query.get(`
       SELECT c.id, c.task_id, c.user_id, c.content, c.created_at,
-             u.username, u.avatar_color
+             u.username, u.avatar_color, u.avatar_url
       FROM comments c
       JOIN users u ON c.user_id = u.id
       WHERE c.id = ?
@@ -87,7 +87,7 @@ router.get('/:taskId', authenticateToken, async (req, res) => {
   const taskId = req.params.taskId;
   try {
     const comments = await query.all(`
-      SELECT c.id, c.task_id, c.user_id, c.content, c.created_at, u.username, u.avatar_color
+      SELECT c.id, c.task_id, c.user_id, c.content, c.created_at, u.username, u.avatar_color, u.avatar_url
       FROM comments c JOIN users u ON c.user_id = u.id
       WHERE c.task_id = ? ORDER BY c.created_at ASC
     `, [taskId]);
@@ -101,14 +101,19 @@ router.get('/:taskId', authenticateToken, async (req, res) => {
 router.post('/:taskId', authenticateToken, async (req, res) => {
   const taskId = req.params.taskId;
   const { content } = req.body;
-  if (!content?.trim()) return res.status(400).json({ error: 'Content required' });
+  if (!content || !content.trim()) return res.status(400).json({ error: 'Comment content cannot be empty' });
+
   try {
-    const result = await query.run('INSERT INTO comments (task_id, user_id, content) VALUES (?, ?, ?)', [taskId, req.user.id, content.trim()]);
-    const comment = await query.get(
-      'SELECT c.id, c.task_id, c.user_id, c.content, c.created_at, u.username, u.avatar_color FROM comments c JOIN users u ON c.user_id = u.id WHERE c.id = ?',
+    const result = await query.run(
+      'INSERT INTO comments (task_id, user_id, content) VALUES (?, ?, ?)',
+      [taskId, req.user.id, content.trim()]
+    );
+
+    const newComment = await query.get(
+      'SELECT c.id, c.task_id, c.user_id, c.content, c.created_at, u.username, u.avatar_color, u.avatar_url FROM comments c JOIN users u ON c.user_id = u.id WHERE c.id = ?',
       [result.id]
     );
-    res.status(201).json(comment);
+    res.status(201).json(newComment);
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
   }

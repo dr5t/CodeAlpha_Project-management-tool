@@ -6,6 +6,7 @@ import Dashboard from './components/Dashboard';
 import ProjectBoard from './components/ProjectBoard';
 import TaskModal from './components/TaskModal';
 import ProfileView from './components/ProfileView';
+import { Icons } from './components/Avatar';
 
 const API_URL = window.location.port === '5173' ? 'http://localhost:5001/api' : '/api';
 
@@ -13,15 +14,28 @@ const API_URL = window.location.port === '5173' ? 'http://localhost:5001/api' : 
 let _toastId = 0;
 
 function ToastContainer({ toasts, onDismiss }) {
+  const getToastIcon = (type) => {
+    switch (type) {
+      case 'success':
+        return <Icons.Check s={16} style={{ color: 'var(--green)' }} />;
+      case 'error':
+        return <Icons.Warning s={16} style={{ color: 'var(--red)' }} />;
+      default:
+        return <Icons.Alert s={16} style={{ color: 'var(--blue)' }} />;
+    }
+  };
+
   return (
     <div className="toast-container">
       {toasts.map(t => (
         <div key={t.id} className={`toast ${t.type}`}>
-          <span className="toast-icon">
-            {t.type === 'success' ? '✅' : t.type === 'error' ? '❌' : 'ℹ️'}
+          <span className="toast-icon" style={{ display: 'flex', alignItems: 'center' }}>
+            {getToastIcon(t.type)}
           </span>
           <span className="toast-msg">{t.message}</span>
-          <button className="toast-close" onClick={() => onDismiss(t.id)}>✕</button>
+          <button className="toast-close" onClick={() => onDismiss(t.id)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Icons.Close s={12} />
+          </button>
         </div>
       ))}
     </div>
@@ -447,7 +461,9 @@ export default function App() {
 
           {currentView === 'board' && !currentProject && (
             <div className="empty-state" style={{ height: '60vh' }}>
-              <div className="empty-icon">📋</div>
+              <div className="empty-icon" style={{ color: 'var(--text-3)', display: 'flex', justifyContent: 'center' }}>
+                <Icons.Projects s={36} />
+              </div>
               <div className="empty-title">No project selected</div>
               <div className="empty-desc">Choose a project from the sidebar or create a new one to get started.</div>
               <button className="btn btn-primary" onClick={() => setShowNewProject(true)} style={{ marginTop: 12 }}>
@@ -476,7 +492,7 @@ export default function App() {
               </div>
               <div className="profile-section" style={{ maxWidth: 560 }}>
                 <div className="profile-section-header">
-                  <h4>🎨 Appearance</h4>
+                  <h4>Appearance</h4>
                 </div>
                 <div>
                   <div className="settings-row">
@@ -501,7 +517,7 @@ export default function App() {
               </div>
               <div className="profile-section" style={{ maxWidth: 560, marginTop: 16 }}>
                 <div className="profile-section-header">
-                  <h4>🔔 Notifications</h4>
+                  <h4>Notifications</h4>
                 </div>
                 <div>
                   <div className="settings-row">
@@ -641,7 +657,9 @@ export default function App() {
           }
         >
           <div style={{ textAlign: 'center', padding: '8px 0' }}>
-            <div style={{ fontSize: '2rem', marginBottom: 12 }}>⚠️</div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, color: 'var(--red)' }}>
+              <Icons.Warning s={36} />
+            </div>
             <p style={{ fontSize: '0.9rem', lineHeight: 1.6 }}>
               Are you sure you want to delete <strong>"{currentProject?.name}"</strong>?
               <br />This will permanently remove all tasks and cannot be undone.
@@ -668,7 +686,9 @@ export default function App() {
           <form id="invite-form" onSubmit={handleInviteSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {systemUsers.length === 0 ? (
               <div className="empty-state" style={{ padding: '20px 0' }}>
-                <div className="empty-icon">👥</div>
+                <div className="empty-icon" style={{ color: 'var(--text-3)', display: 'flex', justifyContent: 'center' }}>
+                  <Icons.Profile s={36} />
+                </div>
                 <div className="empty-desc">All registered users are already members of this project.</div>
               </div>
             ) : (

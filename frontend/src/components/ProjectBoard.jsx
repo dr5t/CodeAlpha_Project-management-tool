@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { Avatar, Icons } from './Avatar';
 
 const COLUMNS = [
   { id: 'todo', label: 'To Do', color: '#6b7280' },
@@ -120,18 +121,15 @@ function TaskCard({ task, onDragStart, onSelect, onMove, onDelete }) {
               </span>
             )}
           </div>
-          {task.assignee_username && (
-            <div
-              title={task.assignee_username}
-              style={{
-                width: 24, height: 24, borderRadius: '50%',
-                background: task.assignee_color || '#6366f1',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '0.65rem', fontWeight: 700, flexShrink: 0
+          {(task.assignee_name || task.assignee_username) && (
+            <Avatar
+              user={{
+                username: task.assignee_name || task.assignee_username,
+                avatar_color: task.assignee_color,
+                avatar_url: task.assignee_avatar_url
               }}
-            >
-              {task.assignee_username[0].toUpperCase()}
-            </div>
+              size="xs"
+            />
           )}
         </div>
       </div>

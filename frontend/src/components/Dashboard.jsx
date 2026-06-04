@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { Icons } from './Avatar';
 
 function timeAgo(dateStr) {
   if (!dateStr) return '';
@@ -11,6 +12,21 @@ function timeAgo(dateStr) {
   return `${Math.floor(h / 24)}d ago`;
 }
 
+function getNotifIcon(type) {
+  switch (type) {
+    case 'project_invite':
+      return <Icons.Invite s={16} style={{ color: 'var(--primary)' }} />;
+    case 'task_assigned':
+      return <Icons.Star s={16} style={{ color: 'var(--amber)' }} />;
+    case 'comment_added':
+      return <Icons.Comment s={16} style={{ color: 'var(--blue)' }} />;
+    case 'task_completed':
+      return <Icons.Check s={16} style={{ color: 'var(--green)' }} />;
+    default:
+      return <Icons.Bell s={16} style={{ color: 'var(--text-3)' }} />;
+  }
+}
+
 export default function Dashboard({ projects, onSelectProject, notifications, onNewProject }) {
   const totalTasks = useMemo(() => projects.reduce((s, p) => s + (p.total_tasks || 0), 0), [projects]);
   const doneTasks = useMemo(() => projects.reduce((s, p) => s + (p.completed_tasks || 0), 0), [projects]);
@@ -18,8 +34,6 @@ export default function Dashboard({ projects, onSelectProject, notifications, on
   const completionRate = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
 
   const recentNotifs = (notifications || []).slice(0, 8);
-
-  const typeEmoji = { project_invite: '📬', task_assigned: '🎯', comment_added: '💬', task_completed: '✅' };
   const typeColor = { project_invite: 'var(--purple-bg)', task_assigned: 'var(--blue-bg)', comment_added: 'var(--green-bg)', task_completed: 'var(--green-bg)' };
 
   return (
@@ -40,10 +54,10 @@ export default function Dashboard({ projects, onSelectProject, notifications, on
       {/* Stats */}
       <div className="stats-grid">
         {[
-          { icon: '📋', bg: 'var(--primary-subtle)', label: 'Total Projects', value: projects.length, color: 'var(--primary-light)' },
-          { icon: '✅', bg: 'var(--green-bg)', label: 'Tasks Done', value: doneTasks, color: 'var(--green)' },
-          { icon: '🔄', bg: 'var(--blue-bg)', label: 'In Progress', value: inProgress, color: 'var(--blue)' },
-          { icon: '📈', bg: 'var(--amber-bg)', label: 'Completion Rate', value: `${completionRate}%`, color: 'var(--amber)' },
+          { icon: <Icons.Projects s={20} />, bg: 'var(--primary-subtle)', label: 'Total Projects', value: projects.length, color: 'var(--primary-light)' },
+          { icon: <Icons.Check s={20} />, bg: 'var(--green-bg)', label: 'Tasks Done', value: doneTasks, color: 'var(--green)' },
+          { icon: <Icons.Activity s={20} />, bg: 'var(--blue-bg)', label: 'In Progress', value: inProgress, color: 'var(--blue)' },
+          { icon: <Icons.Star s={20} />, bg: 'var(--amber-bg)', label: 'Completion Rate', value: `${completionRate}%`, color: 'var(--amber)' },
         ].map((s, i) => (
           <div key={i} className="stat-card" style={{ animationDelay: `${i * 50}ms` }}>
             <div className="stat-icon" style={{ background: s.bg, color: s.color }}>
@@ -67,7 +81,9 @@ export default function Dashboard({ projects, onSelectProject, notifications, on
           </div>
           {projects.length === 0 ? (
             <div className="empty-state">
-              <div className="empty-icon">🚀</div>
+              <div className="empty-icon" style={{ color: 'var(--primary-light)', display: 'flex', justifyContent: 'center' }}>
+                <Icons.Projects s={36} />
+              </div>
               <div className="empty-title">No projects yet</div>
               <div className="empty-desc">Create your first project to start organizing tasks and collaborating with your team.</div>
               <button id="dash-create-first" className="btn btn-primary" onClick={onNewProject} style={{ marginTop: 8 }}>
@@ -134,15 +150,17 @@ export default function Dashboard({ projects, onSelectProject, notifications, on
           <div className="section-card-body">
             {recentNotifs.length === 0 ? (
               <div className="empty-state" style={{ padding: '30px 0' }}>
-                <div className="empty-icon">🔔</div>
+                <div className="empty-icon" style={{ color: 'var(--text-3)', display: 'flex', justifyContent: 'center' }}>
+                  <Icons.Bell s={28} />
+                </div>
                 <div className="empty-desc">No recent activity.</div>
               </div>
             ) : (
               <div className="activity-list">
                 {recentNotifs.map((n, i) => (
                   <div key={n.id} className="activity-item" style={{ animationDelay: `${i * 30}ms` }}>
-                    <div className="activity-dot" style={{ background: typeColor[n.type] || 'var(--bg-elevated)' }}>
-                      {typeEmoji[n.type] || '🔔'}
+                    <div className="activity-dot" style={{ background: typeColor[n.type] || 'var(--bg-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {getNotifIcon(n.type)}
                     </div>
                     <div>
                       <div className="activity-text">{n.message}</div>

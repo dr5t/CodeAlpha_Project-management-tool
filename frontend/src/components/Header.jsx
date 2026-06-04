@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { Icons } from './Avatar';
 
 function timeAgo(dateStr) {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -10,7 +11,20 @@ function timeAgo(dateStr) {
   return `${Math.floor(h / 24)}d ago`;
 }
 
-const typeEmoji = { project_invite: '📬', task_assigned: '🎯', comment_added: '💬', task_completed: '✅' };
+function getNotifIcon(type) {
+  switch (type) {
+    case 'project_invite':
+      return <Icons.Invite s={18} style={{ color: 'var(--primary)' }} />;
+    case 'task_assigned':
+      return <Icons.Star s={18} style={{ color: 'var(--amber)' }} />;
+    case 'comment_added':
+      return <Icons.Comment s={18} style={{ color: 'var(--blue)' }} />;
+    case 'task_completed':
+      return <Icons.Check s={18} style={{ color: 'var(--green)' }} />;
+    default:
+      return <Icons.Bell s={18} style={{ color: 'var(--text-3)' }} />;
+  }
+}
 
 export default function Header({
   currentProject, currentView,
@@ -125,7 +139,9 @@ export default function Header({
               <div className="dropdown-scroll">
                 {notifications.length === 0 ? (
                   <div className="notif-empty">
-                    <div style={{ fontSize: '1.5rem', marginBottom: 6 }}>🔔</div>
+                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8, color: 'var(--text-3)' }}>
+                      <Icons.Bell s={28} />
+                    </div>
                     <div>No notifications yet</div>
                   </div>
                 ) : (
@@ -141,8 +157,8 @@ export default function Header({
                         setShowNotif(false);
                       }}
                     >
-                      <div>
-                        <span style={{ fontSize: '1rem' }}>{typeEmoji[n.type] || '🔔'}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 24, height: 24, flexShrink: 0 }}>
+                        {getNotifIcon(n.type)}
                       </div>
                       <div style={{ flex: 1 }}>
                         <div className="notif-msg">{n.message}</div>

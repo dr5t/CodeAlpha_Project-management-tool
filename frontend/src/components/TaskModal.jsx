@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Avatar } from './Avatar';
 
 const STATUSES = [
   { id: 'todo', label: 'To Do' },
@@ -19,18 +20,7 @@ function timeAgo(dateStr) {
   return `${Math.floor(h / 24)}d ago`;
 }
 
-function Avatar({ username, color, size = 28 }) {
-  return (
-    <div style={{
-      width: size, height: size, borderRadius: '50%',
-      background: color || '#6366f1',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: size * 0.38 + 'px', fontWeight: 700, flexShrink: 0
-    }}>
-      {username ? username[0].toUpperCase() : '?'}
-    </div>
-  );
-}
+// Local Avatar component removed in favor of imported component
 
 export default function TaskModal({ taskId, onClose, API_URL, token, projectMembers, onTaskUpdated }) {
   const dialogRef = useRef(null);
@@ -332,7 +322,15 @@ export default function TaskModal({ taskId, onClose, API_URL, token, projectMemb
                   ) : (
                     comments.map(c => (
                       <div key={c.id} className="comment-item" id={`comment-${c.id}`}>
-                        <Avatar username={c.username || c.author} color={c.avatar_color} size={30} />
+                        <Avatar
+                          user={{
+                            username: c.username || c.author,
+                            avatar_color: c.avatar_color,
+                            avatar_url: c.avatar_url
+                          }}
+                          size="sm"
+                          style={{ width: 30, height: 30 }}
+                        />
                         <div className="comment-bubble" style={{ flex: 1 }}>
                           <div className="comment-meta">
                             <span className="comment-author">{c.username || c.author}</span>
@@ -442,7 +440,15 @@ export default function TaskModal({ taskId, onClose, API_URL, token, projectMemb
                 </select>
                 {selectedAssignee && (
                   <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <Avatar username={selectedAssignee.username} color={selectedAssignee.avatar_color} size={24} />
+                    <Avatar
+                      user={{
+                        username: selectedAssignee.username,
+                        avatar_color: selectedAssignee.avatar_color,
+                        avatar_url: selectedAssignee.avatar_url
+                      }}
+                      size="sm"
+                      style={{ width: 24, height: 24 }}
+                    />
                     <span style={{ fontSize: '0.8rem', color: 'var(--text-2)' }}>{selectedAssignee.username}</span>
                   </div>
                 )}
