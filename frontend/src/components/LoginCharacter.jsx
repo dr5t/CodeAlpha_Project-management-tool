@@ -1,4 +1,3 @@
-import React from 'react';
 
 /**
  * Animated Anime-Style Developer Character.

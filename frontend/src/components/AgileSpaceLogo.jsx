@@ -1,4 +1,3 @@
-import React from 'react';
 
 export default function AgileSpaceLogo({ size = 32, showBg = false, className = "" }) {
   return (
