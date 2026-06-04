@@ -1,0 +1,17 @@
+{
+  "name": "project-management-tool",
+  "version": "1.0.0",
+  "description": "Collaborative project management tool similarity to Trello",
+  "main": "backend/server.js",
+  "scripts": {
+    "install:all": "npm install && npm install --prefix backend && npm install --prefix frontend",
+    "dev:backend": "node backend/server.js",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "start": "node backend/server.js",
+    "build:frontend": "npm run build --prefix frontend"
+  },
+  "dependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
