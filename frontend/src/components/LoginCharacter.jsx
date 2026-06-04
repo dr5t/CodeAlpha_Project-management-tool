@@ -353,7 +353,7 @@ export default function LoginCharacter({ state }) {
         >
           {/* Bare Arm Outline */}
           <path
-            d="M 22 178 Q 38 160 52 160"
+            d="M 22 178 Q 35 158 47 152"
             stroke="#090514"
             strokeWidth="14"
             strokeLinecap="round"
@@ -361,7 +361,7 @@ export default function LoginCharacter({ state }) {
           />
           {/* Bare Arm Skin Fill */}
           <path
-            d="M 22 178 Q 38 160 52 160"
+            d="M 22 178 Q 35 158 47 152"
             stroke="#ffe4e6"
             strokeWidth="9"
             strokeLinecap="round"
@@ -397,7 +397,7 @@ export default function LoginCharacter({ state }) {
         >
           {/* Bare Arm Outline */}
           <path
-            d="M 178 178 Q 162 160 148 160"
+            d="M 178 178 Q 165 158 153 152"
             stroke="#090514"
             strokeWidth="14"
             strokeLinecap="round"
@@ -405,7 +405,7 @@ export default function LoginCharacter({ state }) {
           />
           {/* Bare Arm Skin Fill */}
           <path
-            d="M 178 178 Q 162 160 148 160"
+            d="M 178 178 Q 165 158 153 152"
             stroke="#ffe4e6"
             strokeWidth="9"
             strokeLinecap="round"
