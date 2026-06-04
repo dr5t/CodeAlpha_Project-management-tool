@@ -1,141 +1,155 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+
+function timeAgo(dateStr) {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return 'just now';
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
+
+const typeEmoji = { project_invite: '📬', task_assigned: '🎯', comment_added: '💬', task_completed: '✅' };
 
 export default function Header({
-  currentProject,
-  currentView,
-  notifications,
-  onMarkNotificationRead,
-  onMarkAllNotificationsRead,
+  currentProject, currentView,
+  notifications, onMarkNotificationRead, onMarkAllNotificationsRead,
   onSelectProjectAndTask,
-  onAddMemberClick,
-  onNewProjectClick
+  onAddMemberClick, onNewProjectClick
 }) {
-  const [isNotifyOpen, setIsNotifyOpen] = useState(false);
-  const notifyRef = useRef(null);
+  const [showNotif, setShowNotif] = useState(false);
+  const notifRef = useRef(null);
+  const unread = notifications.filter(n => !n.is_read).length;
 
-  const unreadCount = notifications.filter(n => !n.is_read).length;
-
-  // Handle clicking outside the notification dropdown to close it
+  // Close dropdown when clicking outside
   useEffect(() => {
-    function handleClickOutside(event) {
-      if (notifyRef.current && !notifyRef.current.contains(event.target)) {
-        setIsNotifyOpen(false);
+    function handleClickOutside(e) {
+      if (notifRef.current && !notifRef.current.contains(e.target)) {
+        setShowNotif(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleNotificationClick = (n) => {
-    onMarkNotificationRead(n.id);
-    setIsNotifyOpen(false);
-    if (n.project_id) {
-      onSelectProjectAndTask(n.project_id, n.task_id);
-    }
+  const getBreadcrumb = () => {
+    if (currentView === 'profile') return [{ label: 'Profile' }];
+    if (currentView === 'settings') return [{ label: 'Settings' }];
+    if (currentView === 'dashboard') return [{ label: 'Dashboard' }];
+    if (currentView === 'board' && currentProject) return [
+      { label: 'Projects' },
+      { label: currentProject.name, current: true }
+    ];
+    return [{ label: 'AgileSpace' }];
   };
 
-  const formatTime = (timeStr) => {
-    const d = new Date(timeStr);
-    return d.toLocaleDateString(undefined, { 
-      month: 'short', 
-      day: 'numeric', 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    });
-  };
+  const crumbs = getBreadcrumb();
 
   return (
-    <header className="header">
-      {/* Title / Project Context */}
-      <div className="header-title-area">
-        <h1 className="header-title">
-          {currentView === 'dashboard' ? 'Overview Dashboard' : (currentProject ? currentProject.name : 'Project Board')}
-        </h1>
-        {currentProject && currentView === 'board' && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '10px' }}>
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>|</span>
-            <div className="project-members-avatars" style={{ paddingLeft: '8px' }}>
-              {(currentProject.members || []).map((m, idx) => (
-                <div 
-                  key={m.id || idx}
-                  className="avatar member-avatar-stacked"
-                  style={{ 
-                    backgroundColor: m.avatar_color || '#6366f1',
-                    width: '26px',
-                    height: '26px',
-                    fontSize: '0.75rem'
-                  }}
-                  title={m.username}
-                >
-                  {m.username.charAt(0).toUpperCase()}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+    <header className="app-header">
+      {/* Breadcrumb */}
+      <div className="header-breadcrumb">
+        {crumbs.map((c, i) => (
+          <React.Fragment key={i}>
+            {i > 0 && <span className="breadcrumb-sep">/</span>}
+            <span className={`breadcrumb-item${c.current ? ' current' : ''}`}>{c.label}</span>
+          </React.Fragment>
+        ))}
       </div>
 
-      {/* Header Actions */}
+      {/* Actions */}
       <div className="header-actions">
-        {currentView === 'dashboard' ? (
-          <button className="action-btn btn-primary" onClick={onNewProjectClick}>
-            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-            </svg>
-            New Project
-          </button>
-        ) : (
-          currentProject && (
-            <button className="action-btn btn-secondary" onClick={onAddMemberClick}>
-              <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+        {currentView === 'board' && currentProject && (
+          <>
+            <button
+              id="btn-add-member"
+              className="btn btn-secondary btn-sm"
+              onClick={onAddMemberClick}
+              title="Invite a team member"
+            >
+              <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path strokeLinecap="round" d="M22 11h-6m3-3v6"/>
               </svg>
-              Invite Member
+              Add Member
             </button>
-          )
+          </>
         )}
 
-        {/* Notifications Bell */}
-        <div className="notify-popover-wrapper" ref={notifyRef}>
-          <button 
-            className="notify-trigger-btn"
-            onClick={() => setIsNotifyOpen(!isNotifyOpen)}
-            title="Notifications"
+        <button
+          id="btn-new-project"
+          className="btn btn-primary btn-sm"
+          onClick={onNewProjectClick}
+          title="Create new project"
+        >
+          <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+            <path strokeLinecap="round" d="M12 5v14m-7-7h14"/>
+          </svg>
+          New Project
+        </button>
+
+        {/* Notification bell */}
+        <div style={{ position: 'relative' }} ref={notifRef}>
+          <button
+            id="btn-notifications"
+            className="btn btn-ghost btn-icon notif-btn"
+            onClick={() => setShowNotif(v => !v)}
+            title={`${unread} unread notification${unread !== 1 ? 's' : ''}`}
           >
-            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path strokeLinecap="round" d="M13.73 21a2 2 0 0 1-3.46 0"/>
             </svg>
-            {unreadCount > 0 && (
-              <span className="notify-badge">{unreadCount}</span>
+            {unread > 0 && (
+              <span className="notif-badge">{unread > 9 ? '9+' : unread}</span>
             )}
           </button>
 
-          {isNotifyOpen && (
-            <div className="notify-dropdown">
-              <div className="notify-dropdown-header">
+          {showNotif && (
+            <div className="dropdown-panel" id="notifications-panel">
+              <div className="dropdown-header">
                 <h3>Notifications</h3>
-                {unreadCount > 0 && (
-                  <button className="clear-notify-btn" onClick={onMarkAllNotificationsRead}>
+                {unread > 0 && (
+                  <button
+                    id="btn-mark-all-read"
+                    className="btn btn-ghost"
+                    style={{ fontSize: '0.75rem', padding: '4px 8px' }}
+                    onClick={() => { onMarkAllNotificationsRead(); }}
+                  >
                     Mark all read
                   </button>
                 )}
               </div>
-              <div className="notify-list">
-                {notifications.length > 0 ? (
-                  notifications.map((n) => (
-                    <div 
+              <div className="dropdown-scroll">
+                {notifications.length === 0 ? (
+                  <div className="notif-empty">
+                    <div style={{ fontSize: '1.5rem', marginBottom: 6 }}>🔔</div>
+                    <div>No notifications yet</div>
+                  </div>
+                ) : (
+                  notifications.slice(0, 30).map(n => (
+                    <div
                       key={n.id}
-                      className={`notify-item ${!n.is_read ? 'unread' : ''}`}
-                      onClick={() => handleNotificationClick(n)}
+                      id={`notif-${n.id}`}
+                      className={`notif-item${n.is_read ? '' : ' unread'}`}
+                      onClick={() => {
+                        if (!n.is_read) onMarkNotificationRead(n.id);
+                        if (n.project_id && n.task_id) onSelectProjectAndTask(n.project_id, n.task_id);
+                        else if (n.project_id) onSelectProjectAndTask(n.project_id, null);
+                        setShowNotif(false);
+                      }}
                     >
-                      <span className="notify-item-message">{n.message}</span>
-                      <span className="notify-item-time">{formatTime(n.created_at)}</span>
+                      <div>
+                        <span style={{ fontSize: '1rem' }}>{typeEmoji[n.type] || '🔔'}</span>
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div className="notif-msg">{n.message}</div>
+                        <div className="notif-time">{n.created_at ? timeAgo(n.created_at) : ''}</div>
+                      </div>
                     </div>
                   ))
-                ) : (
-                  <div className="notify-empty">
-                    No notifications yet.
-                  </div>
                 )}
               </div>
             </div>
