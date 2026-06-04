@@ -1,7 +1,7 @@
 import React from 'react';
 
 /**
- * Animated Human Developer Character component.
+ * Animated Anime-Style Developer Character.
  * States: 'idle', 'watching', 'shy', 'peeking'
  */
 export default function LoginCharacter({ state }) {
@@ -12,241 +12,327 @@ export default function LoginCharacter({ state }) {
   return (
     <div className="login-character-wrap" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       <svg
-        width="160"
-        height="180"
+        width="180"
+        height="200"
         viewBox="0 0 200 220"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         style={{ overflow: 'visible' }}
       >
         <style>{`
-          .char-shadow {
+          .anime-shadow {
             transform-origin: center;
-            animation: char-bounce-shadow 4s ease-in-out infinite;
+            animation: anime-bounce-shadow 4s ease-in-out infinite;
           }
-          .char-body-group {
+          .anime-body-group {
             transform-origin: bottom center;
-            animation: char-bounce-body 4s ease-in-out infinite;
+            animation: anime-bounce-body 4s ease-in-out infinite;
           }
           
           .pupil {
-            transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+            transition: transform 0.28s cubic-bezier(0.25, 1, 0.5, 1);
           }
           
           .left-arm {
-            transform-origin: 40px 170px;
+            transform-origin: 38px 175px;
             transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
           }
           .right-arm {
-            transform-origin: 160px 170px;
+            transform-origin: 162px 175px;
             transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
           }
 
           .mouth {
-            transition: d 0.3s ease;
+            transition: d 0.3s ease, transform 0.3s ease;
+          }
+          
+          .eyebrow {
+            transition: transform 0.3s ease;
           }
 
-          @keyframes char-bounce-body {
+          @keyframes anime-bounce-body {
             0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-3px); }
+            50% { transform: translateY(-4px); }
           }
-          @keyframes char-bounce-shadow {
-            0%, 100% { transform: scale(1); opacity: 0.2; }
-            50% { transform: scale(0.93); opacity: 0.12; }
+          @keyframes anime-bounce-shadow {
+            0%, 100% { transform: scale(1); opacity: 0.18; }
+            50% { transform: scale(0.92); opacity: 0.11; }
           }
         `}</style>
 
-        {/* Ground Shadow */}
+        {/* Shadow */}
         <ellipse
-          className="char-shadow"
+          className="anime-shadow"
           cx="100"
-          cy="206"
-          rx="58"
+          cy="208"
+          rx="52"
           ry="6"
           fill="#000"
-          opacity="0.2"
+          opacity="0.18"
         />
 
-        {/* Character Main Body & Head */}
-        <g className="char-body-group">
-          {/* Hoodie Torso */}
+        {/* Anime Character Group */}
+        <g className="anime-body-group">
+          {/* Back Hair (under shoulders) */}
           <path
-            d="M 45 210 C 45 165, 70 150, 100 150 C 130 150, 155 165, 155 210 Z"
-            fill="#4338ca"
-            stroke="#1e1b4b"
-            strokeWidth="4"
+            d="M 55 110 C 50 140, 60 170, 70 175 C 75 160, 68 120, 68 110 Z"
+            fill="#1c1917"
+          />
+          <path
+            d="M 145 110 C 150 140, 140 170, 130 175 C 125 160, 132 120, 132 110 Z"
+            fill="#1c1917"
           />
 
-          {/* Hoodie Drawstrings / Details */}
-          <path d="M 90 158 L 90 178" stroke="#cbd5e1" strokeWidth="2.5" strokeLinecap="round" />
-          <path d="M 110 158 L 110 178" stroke="#cbd5e1" strokeWidth="2.5" strokeLinecap="round" />
-          <circle cx="90" cy="178" r="2.5" fill="#94a3b8" />
-          <circle cx="110" cy="178" r="2.5" fill="#94a3b8" />
+          {/* Shoulders & Hoodie (Unisex street-style hoodie) */}
+          <path
+            d="M 40 215 C 40 175, 66 154, 100 154 C 134 154, 160 175, 160 215 Z"
+            fill="#1e1b4b"
+            stroke="#090514"
+            strokeWidth="3.5"
+          />
+          {/* Collar/Hood details */}
+          <path
+            d="M 68 154 C 80 172, 120 172, 132 154"
+            stroke="#090514"
+            strokeWidth="3.5"
+            fill="#312e81"
+          />
+          <path d="M 92 165 L 92 188" stroke="#818cf8" strokeWidth="2" strokeLinecap="round" />
+          <path d="M 108 165 L 108 188" stroke="#818cf8" strokeWidth="2" strokeLinecap="round" />
+          <circle cx="92" cy="188" r="2" fill="#a5b4fc" />
+          <circle cx="108" cy="188" r="2" fill="#a5b4fc" />
 
           {/* Neck */}
-          <rect x="92" y="130" width="16" height="22" fill="#ffedd5" stroke="#1e1b4b" strokeWidth="3" rx="4" />
-
-          {/* Hoodie Hood back outline */}
           <path
-            d="M 54 135 C 54 135, 52 75, 100 72 C 148 75, 146 135, 146 135 Z"
-            fill="#312e81"
-            stroke="#1e1b4b"
+            d="M 88 128 L 88 150 Q 100 158 112 150 L 112 128 Z"
+            fill="#fee2e2"
+            stroke="#090514"
+            strokeWidth="3"
+          />
+
+          {/* Face (Anime pointed chin) */}
+          <path
+            d="M 66 94 C 66 122, 82 136, 100 136 C 118 136, 134 122, 134 94 C 134 70, 66 70, 66 94 Z"
+            fill="#ffe4e6"
+            stroke="#090514"
             strokeWidth="3.5"
           />
 
-          {/* Face */}
-          <circle cx="100" cy="104" r="35" fill="#ffedd5" stroke="#1e1b4b" strokeWidth="3.5" />
-
-          {/* Hair (Unisex messy developer hairstyle) */}
-          <path
-            d="M 62 100 C 60 70, 85 64, 100 68 C 115 64, 140 70, 138 100 C 144 92, 142 80, 134 76 C 122 68, 114 62, 100 65 C 86 62, 78 68, 66 76 C 58 80, 56 92, 62 100 Z"
-            fill="#292524"
-            stroke="#1e1b4b"
-            strokeWidth="2"
-          />
-          <path
-            d="M 80 72 Q 88 80 94 76 Q 102 82 110 76 Q 118 80 124 73"
-            stroke="#292524"
-            strokeWidth="3"
-            strokeLinecap="round"
-            fill="none"
-          />
+          {/* Rosy blush */}
+          <ellipse cx="73" cy="116" rx="5" ry="3" fill="#fda4af" opacity="0.6" />
+          <ellipse cx="127" cy="116" rx="5" ry="3" fill="#fda4af" opacity="0.6" />
 
           {/* Left Eyeball */}
-          <circle cx="83" cy="102" r="8.5" fill="white" stroke="#1e1b4b" strokeWidth="2.5" />
-          {/* Left Pupil */}
+          <circle cx="82" cy="100" r="11" fill="white" stroke="#090514" strokeWidth="2.5" />
+          {/* Left Iris / Anime Glow */}
           <g
             className="pupil"
             style={{
               transform: isWatching
-                ? 'translate(0px, 2.5px)'
+                ? 'translate(0px, 3px)'
                 : isShy
                 ? 'translate(0px, 0px) scale(0)'
                 : isPeeking
-                ? 'translate(2.5px, 0.5px)'
+                ? 'translate(3px, 1px)'
                 : 'translate(0px, 0px)',
             }}
           >
-            <circle cx="83" cy="102" r="3.5" fill="#292524" />
-            <circle cx="82" cy="100" r="1.2" fill="white" />
+            {/* Colorful gradient-like iris */}
+            <circle cx="82" cy="100" r="8" fill="#818cf8" />
+            <circle cx="82" cy="100" r="4.5" fill="#312e81" />
+            <circle cx="79.5" cy="97" r="2.5" fill="white" /> {/* Core highlight */}
+            <circle cx="84.5" cy="102" r="1.2" fill="white" /> {/* Accent highlight */}
           </g>
+          {/* Thick Anime Eyelash / Liner */}
+          <path d="M 70 96 C 75 91, 89 91, 94 96" stroke="#090514" strokeWidth="3.5" strokeLinecap="round" fill="none" />
+          <path d="M 92 94 L 95 91" stroke="#090514" strokeWidth="2" strokeLinecap="round" />
 
           {/* Right Eyeball */}
-          <circle cx="117" cy="102" r="8.5" fill="white" stroke="#1e1b4b" strokeWidth="2.5" />
-          {/* Right Pupil */}
+          <circle cx="118" cy="100" r="11" fill="white" stroke="#090514" strokeWidth="2.5" />
+          {/* Right Iris / Anime Glow */}
           <g
             className="pupil"
             style={{
               transform: isWatching
-                ? 'translate(0px, 2.5px)'
+                ? 'translate(0px, 3px)'
                 : isShy || isPeeking
                 ? 'translate(0px, 0px) scale(0)'
                 : 'translate(0px, 0px)',
             }}
           >
-            <circle cx="117" cy="102" r="3.5" fill="#292524" />
-            <circle cx="116" cy="100" r="1.2" fill="white" />
+            <circle cx="118" cy="100" r="8" fill="#818cf8" />
+            <circle cx="118" cy="100" r="4.5" fill="#312e81" />
+            <circle cx="115.5" cy="97" r="2.5" fill="white" />
+            <circle cx="120.5" cy="102" r="1.2" fill="white" />
           </g>
-
-          {/* Glasses */}
-          <circle cx="83" cy="102" r="12" stroke="#d97706" strokeWidth="2.5" fill="none" />
-          <circle cx="117" cy="102" r="12" stroke="#d97706" strokeWidth="2.5" fill="none" />
-          <path d="M 95 102 L 105 102" stroke="#d97706" strokeWidth="2.5" />
+          {/* Thick Anime Eyelash / Liner */}
+          <path d="M 106 96 C 111 91, 125 91, 130 96" stroke="#090514" strokeWidth="3.5" strokeLinecap="round" fill="none" />
+          <path d="M 108 94 L 105 91" stroke="#090514" strokeWidth="2" strokeLinecap="round" />
 
           {/* Eyebrows */}
-          <path d="M 72 90 Q 82 86 92 90" stroke="#292524" strokeWidth="2.2" strokeLinecap="round" fill="none" />
-          <path d="M 108 90 Q 118 86 128 90" stroke="#292524" strokeWidth="2.2" strokeLinecap="round" fill="none" />
+          <path
+            className="eyebrow"
+            style={{ transform: isShy || isPeeking ? 'translateY(1.5px)' : 'none' }}
+            d="M 70 87 Q 82 82 91 86"
+            stroke="#090514"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            fill="none"
+          />
+          <path
+            className="eyebrow"
+            style={{ transform: isShy || isPeeking ? 'translateY(1.5px)' : 'none' }}
+            d="M 109 86 Q 118 82 130 87"
+            stroke="#090514"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            fill="none"
+          />
 
-          {/* Blush */}
-          <circle cx="72" cy="115" r="4.5" fill="#fda4af" opacity="0.6" />
-          <circle cx="128" cy="115" r="4.5" fill="#fda4af" opacity="0.6" />
-
-          {/* Nose */}
-          <path d="M 98 107 Q 100 110 102 107" stroke="#1e1b4b" strokeWidth="2" strokeLinecap="round" fill="none" />
+          {/* Nose (cute anime dot) */}
+          <circle cx="100" cy="109" r="1.5" fill="#4c0519" />
 
           {/* Mouth */}
           <path
             className="mouth"
             d={
               isShy
-                ? 'M 95 120 L 105 120' // Straight expression
+                ? 'M 96 119 L 104 119' // Small neutral mouth
                 : isPeeking
-                ? 'M 94 118 Q 100 124 106 118' // Cheeky smile peeking
-                : 'M 94 118 Q 100 123 106 118' // Cute smile
+                ? 'M 95 117 Q 100 123 105 117' // Happy peeking grin
+                : 'M 96 117 Q 100 121 104 117' // Cute soft smile
             }
-            stroke="#1e1b4b"
-            strokeWidth="3.2"
+            stroke="#090514"
+            strokeWidth="3"
             strokeLinecap="round"
             fill="none"
           />
+
+          {/* Front Hair (Layered anime bangs framing face) */}
+          {/* Left strand */}
+          <path
+            d="M 64 80 Q 75 106 79 108 C 73 90, 68 82, 64 80 Z"
+            fill="#292524"
+          />
+          {/* Middle fringe */}
+          <path
+            d="M 78 72 Q 92 108 95 108 C 91 85, 84 76, 78 72 Z"
+            fill="#292524"
+          />
+          {/* Right strand */}
+          <path
+            d="M 122 72 Q 108 108 105 108 C 109 85, 116 76, 122 72 Z"
+            fill="#292524"
+          />
+          <path
+            d="M 136 80 Q 125 106 121 108 C 127 90, 132 82, 136 80 Z"
+            fill="#292524"
+          />
+          
+          {/* Top hair spikes */}
+          <path
+            d="M 65 76 C 75 60, 100 55, 125 60 C 135 70, 140 85, 138 96 C 145 78, 130 63, 100 60 C 70 63, 58 78, 65 76 Z"
+            fill="#292524"
+          />
+          <path
+            d="M 95 56 Q 104 46 102 58"
+            stroke="#292524"
+            strokeWidth="4"
+            strokeLinecap="round"
+            fill="none"
+          /> {/* Ahoge (cute hair strand on top) */}
         </g>
 
-          {/* Hands with distinct finger paths overlaying face */}
-          {/* Left Arm & Hand */}
-          <g
-            className="left-arm"
-            style={{
-              transform: isShy
-                ? 'translate(28px, -65px) rotate(42deg)'
-                : isPeeking
-                ? 'translate(28px, -36px) rotate(16deg)'
-                : 'translate(0px, 15px) rotate(0deg)',
-            }}
-          >
-            {/* Hoodie sleeve */}
+        {/* Elegant Hands overlaying face */}
+        {/* Left Arm & Hand */}
+        <g
+          className="left-arm"
+          style={{
+            transform: isShy
+              ? 'translate(28px, -62px) rotate(42deg)'
+              : isPeeking
+              ? 'translate(28px, -33px) rotate(16deg)'
+              : 'translate(0px, 15px) rotate(0deg)',
+          }}
+        >
+          {/* Sleeve */}
+          <path
+            d="M 22 178 Q 38 160 52 160"
+            stroke="#1e1b4b"
+            strokeWidth="15"
+            strokeLinecap="round"
+            fill="none"
+          />
+          <path
+            d="M 22 178 Q 38 160 52 160"
+            stroke="#312e81"
+            strokeWidth="11"
+            strokeLinecap="round"
+            fill="none"
+          />
+          
+          {/* Hand Group (drawn so left eye is covered in shy, peeking looks between rect fingers) */}
+          <g transform="translate(45, 140)">
+            {/* Elegant Anime Palm */}
             <path
-              d="M 32 178 Q 45 160 55 160"
-              stroke="#4338ca"
-              strokeWidth="15"
-              strokeLinecap="round"
-              fill="none"
+              d="M 2 15 C 2 7, 14 7, 14 15 Z"
+              fill="#ffe4e6"
+              stroke="#090514"
+              strokeWidth="2.5"
             />
-            
-            {/* Hand Group (drawn so left eye is covered in shy, peeking looks between rect fingers) */}
-            <g transform="translate(48, 140)">
-              {/* Palm */}
-              <circle cx="8" cy="12" r="8.5" fill="#ffedd5" stroke="#1e1b4b" strokeWidth="2.5" />
-              {/* 4 separate fingers with gaps */}
-              <g transform="translate(1, 2)">
-                <rect x="0" y="-12" width="3.2" height="15" rx="1.5" fill="#ffedd5" stroke="#1e1b4b" strokeWidth="1.8" />
-                <rect x="4.8" y="-14" width="3.2" height="17" rx="1.5" fill="#ffedd5" stroke="#1e1b4b" strokeWidth="1.8" />
-                <rect x="9.6" y="-13" width="3.2" height="16" rx="1.5" fill="#ffedd5" stroke="#1e1b4b" strokeWidth="1.8" />
-                <rect x="14.4" y="-10" width="3.2" height="13" rx="1.5" fill="#ffedd5" stroke="#1e1b4b" strokeWidth="1.8" />
-              </g>
+            {/* 4 separate long anime fingers with gaps */}
+            <g transform="translate(1, 1)">
+              <rect x="0" y="-14" width="2.8" height="17" rx="1.4" fill="#ffe4e6" stroke="#090514" strokeWidth="1.8" />
+              <rect x="4.4" y="-17" width="2.8" height="20" rx="1.4" fill="#ffe4e6" stroke="#090514" strokeWidth="1.8" />
+              <rect x="8.8" y="-16" width="2.8" height="19" rx="1.4" fill="#ffe4e6" stroke="#090514" strokeWidth="1.8" />
+              <rect x="13.2" y="-12" width="2.8" height="15" rx="1.4" fill="#ffe4e6" stroke="#090514" strokeWidth="1.8" />
             </g>
           </g>
+        </g>
 
-          {/* Right Arm & Hand */}
-          <g
-            className="right-arm"
-            style={{
-              transform: isShy || isPeeking
-                ? 'translate(-28px, -65px) rotate(-42deg)'
-                : 'translate(0px, 15px) rotate(0deg)',
-            }}
-          >
-            {/* Hoodie sleeve */}
+        {/* Right Arm & Hand */}
+        <g
+          className="right-arm"
+          style={{
+            transform: isShy || isPeeking
+              ? 'translate(-28px, -62px) rotate(-42deg)'
+              : 'translate(0px, 15px) rotate(0deg)',
+          }}
+        >
+          {/* Sleeve */}
+          <path
+            d="M 178 178 Q 162 160 148 160"
+            stroke="#1e1b4b"
+            strokeWidth="15"
+            strokeLinecap="round"
+            fill="none"
+          />
+          <path
+            d="M 178 178 Q 162 160 148 160"
+            stroke="#312e81"
+            strokeWidth="11"
+            strokeLinecap="round"
+            fill="none"
+          />
+          
+          {/* Hand Group */}
+          <g transform="translate(126, 140)">
+            {/* Elegant Anime Palm */}
             <path
-              d="M 168 178 Q 155 160 145 160"
-              stroke="#4338ca"
-              strokeWidth="15"
-              strokeLinecap="round"
-              fill="none"
+              d="M 2 15 C 2 7, 14 7, 14 15 Z"
+              fill="#ffe4e6"
+              stroke="#090514"
+              strokeWidth="2.5"
             />
-            
-            {/* Hand Group */}
-            <g transform="translate(126, 140)">
-              {/* Palm */}
-              <circle cx="8" cy="12" r="8.5" fill="#ffedd5" stroke="#1e1b4b" strokeWidth="2.5" />
-              {/* 4 separate fingers with gaps */}
-              <g transform="translate(1, 2)">
-                <rect x="0" y="-10" width="3.2" height="13" rx="1.5" fill="#ffedd5" stroke="#1e1b4b" strokeWidth="1.8" />
-                <rect x="4.8" y="-13" width="3.2" height="16" rx="1.5" fill="#ffedd5" stroke="#1e1b4b" strokeWidth="1.8" />
-                <rect x="9.6" y="-14" width="3.2" height="17" rx="1.5" fill="#ffedd5" stroke="#1e1b4b" strokeWidth="1.8" />
-                <rect x="14.4" y="-12" width="3.2" height="15" rx="1.5" fill="#ffedd5" stroke="#1e1b4b" strokeWidth="1.8" />
-              </g>
+            {/* 4 separate long anime fingers with gaps */}
+            <g transform="translate(1, 1)">
+              <rect x="0" y="-12" width="2.8" height="15" rx="1.4" fill="#ffe4e6" stroke="#090514" strokeWidth="1.8" />
+              <rect x="4.4" y="-16" width="2.8" height="19" rx="1.4" fill="#ffe4e6" stroke="#090514" strokeWidth="1.8" />
+              <rect x="8.8" y="-17" width="2.8" height="20" rx="1.4" fill="#ffe4e6" stroke="#090514" strokeWidth="1.8" />
+              <rect x="13.2" y="-14" width="2.8" height="17" rx="1.4" fill="#ffe4e6" stroke="#090514" strokeWidth="1.8" />
             </g>
           </g>
+        </g>
       </svg>
     </div>
   );
