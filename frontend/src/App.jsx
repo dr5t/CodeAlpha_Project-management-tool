@@ -1,323 +1,254 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Auth from './components/Auth';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import Dashboard from './components/Dashboard';
 import ProjectBoard from './components/ProjectBoard';
 import TaskModal from './components/TaskModal';
+import ProfileView from './components/ProfileView';
 
 const API_URL = window.location.port === '5173' ? 'http://localhost:5001/api' : '/api';
 
+// ─── Toast System ─────────────────────────────────────────────────────────────
+let _toastId = 0;
+
+function ToastContainer({ toasts, onDismiss }) {
+  return (
+    <div className="toast-container">
+      {toasts.map(t => (
+        <div key={t.id} className={`toast ${t.type}`}>
+          <span className="toast-icon">
+            {t.type === 'success' ? '✅' : t.type === 'error' ? '❌' : 'ℹ️'}
+          </span>
+          <span className="toast-msg">{t.message}</span>
+          <button className="toast-close" onClick={() => onDismiss(t.id)}>✕</button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── Generic Modal Dialog ─────────────────────────────────────────────────────
+function ModalDialog({ id, title, children, footer, onClose, size = '' }) {
+  const ref = useRef(null);
+  useEffect(() => { if (ref.current) ref.current.showModal(); }, []);
+  return (
+    <dialog ref={ref} id={id} onClose={onClose} style={{ maxWidth: size === 'sm' ? 460 : 560, width: '90vw' }}>
+      <div className="modal-box">
+        <div className="modal-header-simple">
+          <h2>{title}</h2>
+          <button className="btn btn-ghost btn-icon" onClick={() => { ref.current?.close(); onClose(); }}>
+            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+              <path strokeLinecap="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div className="modal-body-simple">{children}</div>
+        {footer && <div className="modal-footer">{footer}</div>}
+      </div>
+    </dialog>
+  );
+}
+
 export default function App() {
   const [token, setToken] = useState(localStorage.getItem('token') || '');
-  const [user, setUser] = useState(null);
+  const [user, setUser]   = useState(null);
   const [projects, setProjects] = useState([]);
   const [currentProject, setCurrentProject] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [notifications, setNotifications] = useState([]);
-  const [currentView, setCurrentView] = useState('dashboard'); // 'dashboard' or 'board'
+  const [currentView, setCurrentView] = useState('dashboard');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [activeTaskId, setActiveTaskId] = useState(null);
+  const [toasts, setToasts] = useState([]);
 
-  // System User List for Invite Dropdown
+  // Modals
+  const [showNewProject, setShowNewProject]   = useState(false);
+  const [showInvite, setShowInvite]           = useState(false);
+  const [showEditProject, setShowEditProject] = useState(false);
+  const [showDeleteProject, setShowDeleteProject] = useState(false);
+
+  // New project form
+  const [newProjName, setNewProjName] = useState('');
+  const [newProjDesc, setNewProjDesc] = useState('');
+  const [newProjError, setNewProjError] = useState('');
+
+  // Edit project form
+  const [editProjName, setEditProjName] = useState('');
+  const [editProjDesc, setEditProjDesc] = useState('');
+
+  // Invite
   const [systemUsers, setSystemUsers] = useState([]);
   const [inviteUserId, setInviteUserId] = useState('');
 
-  // Dialog Refs
-  const newProjectDialogRef = useRef(null);
-  const inviteMemberDialogRef = useRef(null);
-
-  // New Project Form State
-  const [newProjName, setNewProjName] = useState('');
-  const [newProjDesc, setNewProjDesc] = useState('');
-
-  // Live Toast Notification State
-  const [toast, setToast] = useState(null);
-
-  // WebSocket Ref
+  // WebSocket
   const wsRef = useRef(null);
 
-  // 1. Restore User Session on mount
+  // ─── Toast helpers ────────────────────────────────────────────────────────
+  const showToast = useCallback((message, type = 'info') => {
+    const id = ++_toastId;
+    setToasts(prev => [...prev, { id, message, type }]);
+    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 5000);
+  }, []);
+
+  const dismissToast = (id) => setToasts(prev => prev.filter(t => t.id !== id));
+
+  // ─── Session restore ─────────────────────────────────────────────────────
   useEffect(() => {
     if (!token) return;
-
-    const restoreSession = async () => {
-      try {
-        const res = await fetch(`${API_URL}/auth/me`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (!res.ok) throw new Error('Session invalid');
-        const data = await res.json();
-        setUser(data.user);
-      } catch (err) {
-        console.error(err.message);
-        handleLogout();
-      }
-    };
-    restoreSession();
+    fetch(`${API_URL}/auth/me`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.ok ? r.json() : Promise.reject('session_expired'))
+      .then(d => setUser(d.user))
+      .catch(() => handleLogout());
   }, [token]);
 
-  // 2. Fetch Projects and Notifications when logged in
+  // ─── Fetch data when logged in ───────────────────────────────────────────
   useEffect(() => {
     if (!user) return;
     fetchProjects();
     fetchNotifications();
   }, [user]);
 
-  // 3. Fetch Tasks when active project changes
+  // ─── Fetch tasks when project changes ───────────────────────────────────
   useEffect(() => {
-    if (!currentProject) {
-      setTasks([]);
-      return;
-    }
+    if (!currentProject) { setTasks([]); return; }
     fetchTasks(currentProject.id);
-
-    // Alert WebSockets about active project workspace change
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({
-        type: 'JOIN_PROJECT',
-        projectId: currentProject.id,
-        userId: user.id
-      }));
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({ type: 'JOIN_PROJECT', projectId: currentProject.id, userId: user?.id }));
     }
-
     return () => {
-      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      if (wsRef.current?.readyState === WebSocket.OPEN) {
         wsRef.current.send(JSON.stringify({ type: 'LEAVE_PROJECT' }));
       }
     };
   }, [currentProject]);
 
-  // 4. WebSocket setup
+  // ─── WebSocket ───────────────────────────────────────────────────────────
   useEffect(() => {
     if (!user) return;
-
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.port === '5173' 
-      ? `${window.location.hostname}:5001` 
+    const host = window.location.port === '5173'
+      ? `${window.location.hostname}:5001`
       : window.location.host;
-    const wsUrl = `${protocol}//${host}`;
 
     let socket;
-    const connectWS = () => {
-      console.log('Connecting to WebSocket channel:', wsUrl);
-      socket = new WebSocket(wsUrl);
+    const connect = () => {
+      socket = new WebSocket(`${protocol}//${host}`);
       wsRef.current = socket;
-
       socket.onopen = () => {
-        console.log('WebSocket connection established.');
-        // If already selected project, join room immediately
         if (currentProject) {
-          socket.send(JSON.stringify({
-            type: 'JOIN_PROJECT',
-            projectId: currentProject.id,
-            userId: user.id
-          }));
+          socket.send(JSON.stringify({ type: 'JOIN_PROJECT', projectId: currentProject.id, userId: user.id }));
         }
       };
-
       socket.onmessage = (event) => {
         try {
-          const message = JSON.parse(event.data);
-          
-          // Dispatch custom browser event for modal thread capture
-          const customEvent = new MessageEvent('websocket-message', { data: event.data });
-          window.dispatchEvent(customEvent);
-
-          switch (message.type) {
-            case 'BOARD_UPDATED':
-              if (currentProject && Number(message.projectId) === Number(currentProject.id)) {
-                // Refresh board items
-                fetchTasks(currentProject.id);
-              }
-              // Always refresh projects to update completion stats
-              fetchProjects();
-              break;
-
-            case 'NOTIFICATION_RECEIVED':
-              // Prepend new notification
-              setNotifications(prev => [message.notification, ...prev]);
-              // Trigger active Toast notification
-              showToastAlert(message.notification.message);
-              break;
-              
-            default:
-              break;
+          const msg = JSON.parse(event.data);
+          window.dispatchEvent(new MessageEvent('websocket-message', { data: event.data }));
+          if (msg.type === 'BOARD_UPDATED') {
+            if (currentProject && Number(msg.projectId) === Number(currentProject.id)) fetchTasks(currentProject.id);
+            fetchProjects();
           }
-        } catch (err) {
-          console.error('Socket message handler error:', err);
-        }
+          if (msg.type === 'NOTIFICATION_RECEIVED') {
+            setNotifications(prev => [msg.notification, ...prev]);
+            showToast(msg.notification.message, 'info');
+          }
+        } catch {}
       };
-
-      socket.onclose = () => {
-        console.log('WebSocket closed. Retrying connection in 5s...');
-        setTimeout(() => connectWS(), 5000);
-      };
-
-      socket.onerror = (err) => {
-        console.error('WebSocket encountered an error:', err);
-      };
+      socket.onclose = () => setTimeout(connect, 5000);
     };
+    connect();
+    return () => socket?.close();
+  }, [user]);
 
-    connectWS();
-
-    return () => {
-      if (socket) socket.close();
-    };
-  }, [user, currentProject]);
-
-  const showToastAlert = (message) => {
-    setToast(message);
-    setTimeout(() => {
-      setToast(null);
-    }, 4500);
-  };
-
+  // ─── Data fetchers ───────────────────────────────────────────────────────
   const fetchProjects = async () => {
     try {
-      const res = await fetch(`${API_URL}/projects`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setProjects(data);
-      }
-    } catch (err) {
-      console.error(err);
-    }
+      const r = await fetch(`${API_URL}/projects`, { headers: { Authorization: `Bearer ${token}` } });
+      if (r.ok) { const d = await r.json(); setProjects(d); }
+    } catch {}
   };
-
-  const fetchTasks = async (projId) => {
+  const fetchTasks = async (pid) => {
     try {
-      const res = await fetch(`${API_URL}/tasks/project/${projId}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setTasks(data);
-      }
-    } catch (err) {
-      console.error(err);
-    }
+      const r = await fetch(`${API_URL}/tasks/project/${pid}`, { headers: { Authorization: `Bearer ${token}` } });
+      if (r.ok) { const d = await r.json(); setTasks(d); }
+    } catch {}
   };
-
   const fetchNotifications = async () => {
     try {
-      const res = await fetch(`${API_URL}/notifications`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setNotifications(data);
-      }
-    } catch (err) {
-      console.error(err);
-    }
+      const r = await fetch(`${API_URL}/notifications`, { headers: { Authorization: `Bearer ${token}` } });
+      if (r.ok) { const d = await r.json(); setNotifications(d); }
+    } catch {}
   };
 
-  // Auth Callbacks
+  // ─── Auth ────────────────────────────────────────────────────────────────
   const handleAuthSuccess = (userData, userToken) => {
     localStorage.setItem('token', userToken);
     setToken(userToken);
     setUser(userData);
   };
-
   const handleLogout = () => {
     localStorage.removeItem('token');
-    setToken('');
-    setUser(null);
-    setProjects([]);
-    setCurrentProject(null);
-    setTasks([]);
-    setNotifications([]);
+    setToken(''); setUser(null);
+    setProjects([]); setCurrentProject(null);
+    setTasks([]); setNotifications([]);
     setCurrentView('dashboard');
   };
+  const handleProfileUpdated = (updatedUser, newToken) => {
+    if (newToken) {
+      localStorage.setItem('token', newToken);
+      setToken(newToken);
+    }
+    setUser(updatedUser);
+    showToast('Profile updated!', 'success');
+  };
 
-  // Notifications Callbacks
+  // ─── Notifications ───────────────────────────────────────────────────────
   const handleMarkNotificationRead = async (id) => {
     try {
-      await fetch(`${API_URL}/notifications/${id}/read`, {
-        method: 'PUT',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      setNotifications(prev => 
-        prev.map(n => n.id === id ? { ...n, is_read: 1 } : n)
-      );
-    } catch (err) {
-      console.error(err);
-    }
+      await fetch(`${API_URL}/notifications/${id}/read`, { method: 'PUT', headers: { Authorization: `Bearer ${token}` } });
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: 1 } : n));
+    } catch {}
   };
-
   const handleMarkAllNotificationsRead = async () => {
     try {
-      await fetch(`${API_URL}/notifications/read-all`, {
-        method: 'PUT',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      await fetch(`${API_URL}/notifications/read-all`, { method: 'PUT', headers: { Authorization: `Bearer ${token}` } });
       setNotifications(prev => prev.map(n => ({ ...n, is_read: 1 })));
-    } catch (err) {
-      console.error(err);
-    }
+    } catch {}
   };
 
+  // ─── Navigate to project + optional task ────────────────────────────────
   const handleSelectProjectAndTask = async (projId, taskId) => {
-    // 1. Locate and select the target project workspace
-    const proj = projects.find(p => p.id === projId);
+    let proj = projects.find(p => p.id === projId);
+    if (!proj) {
+      await fetchProjects();
+      proj = projects.find(p => p.id === projId);
+    }
     if (proj) {
       setCurrentProject(proj);
       setCurrentView('board');
-      // 2. Open card details modal
-      if (taskId) {
-        setActiveTaskId(taskId);
-      }
-    } else {
-      // Re-fetch projects in case they were added
-      await fetchProjects();
-      const updatedProj = projects.find(p => p.id === projId);
-      if (updatedProj) {
-        setCurrentProject(updatedProj);
-        setCurrentView('board');
-        if (taskId) setActiveTaskId(taskId);
-      }
+      if (taskId) setActiveTaskId(taskId);
     }
   };
 
-  // Task Actions
+  // ─── Tasks ───────────────────────────────────────────────────────────────
   const handleMoveTask = async (taskId, targetStatus) => {
-    // Optimistic layout update
-    const previousTasks = [...tasks];
-    setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: targetStatus } : t));
-
+    const prev = [...tasks];
+    setTasks(p => p.map(t => t.id === taskId ? { ...t, status: targetStatus } : t));
     try {
       const taskToMove = tasks.find(t => t.id === taskId);
       if (!taskToMove) return;
-
       const res = await fetch(`${API_URL}/tasks/${taskId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          title: taskToMove.title,
-          description: taskToMove.description,
-          status: targetStatus,
-          priority: taskToMove.priority,
-          due_date: taskToMove.due_date,
-          assignee_id: taskToMove.assignee_id
-        })
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ ...taskToMove, status: targetStatus })
       });
-
-      if (!res.ok) throw new Error('Card movement failed');
-      const data = await res.json();
-      
-      // Update local task properties with response data
-      setTasks(prev => prev.map(t => t.id === taskId ? data : t));
-      fetchProjects(); // Recalculate stats
-    } catch (err) {
-      console.error(err);
-      // Revert states on error
-      setTasks(previousTasks);
+      if (!res.ok) throw new Error();
+      const d = await res.json();
+      setTasks(p => p.map(t => t.id === taskId ? d : t));
+      fetchProjects();
+    } catch {
+      setTasks(prev);
+      showToast('Failed to move task', 'error');
     }
   };
 
@@ -325,24 +256,15 @@ export default function App() {
     try {
       const res = await fetch(`${API_URL}/tasks/project/${currentProject.id}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          title,
-          status: columnId,
-          priority: 'medium'
-        })
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ title, status: columnId, priority: 'medium' })
       });
-
-      if (!res.ok) throw new Error('Task creation failed');
+      if (!res.ok) throw new Error();
       const newTask = await res.json();
-      
       setTasks(prev => [...prev, newTask]);
       fetchProjects();
-    } catch (err) {
-      console.error(err);
+    } catch {
+      showToast('Failed to add task', 'error');
     }
   };
 
@@ -355,108 +277,126 @@ export default function App() {
     fetchProjects();
   };
 
-  // Project Creation Callback
-  const handleCreateProject = async (e) => {
-    e.preventDefault();
-    if (!newProjName.trim()) return;
-
+  const handleDeleteTask = async (taskId) => {
     try {
-      const res = await fetch(`${API_URL}/projects`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ name: newProjName.trim(), description: newProjDesc.trim() })
+      await fetch(`${API_URL}/tasks/${taskId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
       });
-
-      if (!res.ok) throw new Error('Create project failed');
-      const newProj = await res.json();
-
-      setProjects(prev => [newProj, ...prev]);
-      setCurrentProject(newProj);
-      setCurrentView('board');
-      
-      setNewProjName('');
-      setNewProjDesc('');
-      if (newProjectDialogRef.current) newProjectDialogRef.current.close();
-    } catch (err) {
-      console.error(err);
+      setTasks(prev => prev.filter(t => t.id !== taskId));
+      fetchProjects();
+      showToast('Task deleted', 'info');
+    } catch {
+      showToast('Failed to delete task', 'error');
     }
   };
 
-  // Project Inviting Member Callback
-  const handleOpenInviteDialog = async () => {
+  // ─── Projects ────────────────────────────────────────────────────────────
+  const handleCreateProject = async (e) => {
+    e.preventDefault();
+    if (!newProjName.trim()) { setNewProjError('Project name is required.'); return; }
+    setNewProjError('');
     try {
-      const res = await fetch(`${API_URL}/auth/users`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+      const res = await fetch(`${API_URL}/projects`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ name: newProjName.trim(), description: newProjDesc.trim() })
       });
-      if (res.ok) {
-        const usersList = await res.json();
-        // Filter out current members
-        const currentMemberIds = (currentProject.members || []).map(m => m.user_id || m.id);
-        const nonMembers = usersList.filter(u => !currentMemberIds.includes(u.id));
-        
-        setSystemUsers(nonMembers);
-        if (nonMembers.length > 0) {
-          setInviteUserId(nonMembers[0].id);
-        } else {
-          setInviteUserId('');
-        }
-
-        if (inviteMemberDialogRef.current) {
-          inviteMemberDialogRef.current.showModal();
-        }
-      }
-    } catch (err) {
-      console.error(err);
+      if (!res.ok) throw new Error('Create failed');
+      const newProj = await res.json();
+      setProjects(prev => [newProj, ...prev]);
+      setCurrentProject(newProj);
+      setCurrentView('board');
+      setNewProjName(''); setNewProjDesc('');
+      setShowNewProject(false);
+      showToast(`Project "${newProj.name}" created!`, 'success');
+    } catch {
+      setNewProjError('Failed to create project.');
     }
+  };
+
+  const handleEditProject = async (e) => {
+    e.preventDefault();
+    if (!editProjName.trim()) return;
+    try {
+      const res = await fetch(`${API_URL}/projects/${currentProject.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ name: editProjName.trim(), description: editProjDesc.trim() })
+      });
+      if (!res.ok) throw new Error();
+      const updated = { ...currentProject, name: editProjName.trim(), description: editProjDesc.trim() };
+      setCurrentProject(updated);
+      setProjects(prev => prev.map(p => p.id === currentProject.id ? { ...p, ...updated } : p));
+      setShowEditProject(false);
+      showToast('Project updated', 'success');
+    } catch {
+      showToast('Failed to update project', 'error');
+    }
+  };
+
+  const handleDeleteProject = async () => {
+    try {
+      await fetch(`${API_URL}/projects/${currentProject.id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setProjects(prev => prev.filter(p => p.id !== currentProject.id));
+      setCurrentProject(null);
+      setCurrentView('dashboard');
+      setShowDeleteProject(false);
+      showToast('Project deleted', 'info');
+    } catch {
+      showToast('Failed to delete project', 'error');
+    }
+  };
+
+  // ─── Invite member ───────────────────────────────────────────────────────
+  const handleOpenInvite = async () => {
+    try {
+      const r = await fetch(`${API_URL}/auth/users`, { headers: { Authorization: `Bearer ${token}` } });
+      if (!r.ok) return;
+      const all = await r.json();
+      const memberIds = (currentProject?.members || []).map(m => m.user_id || m.id);
+      const eligible = all.filter(u => !memberIds.includes(u.id));
+      setSystemUsers(eligible);
+      setInviteUserId(eligible[0]?.id || '');
+      setShowInvite(true);
+    } catch {}
   };
 
   const handleInviteSubmit = async (e) => {
     e.preventDefault();
     if (!inviteUserId) return;
-
     try {
       const res = await fetch(`${API_URL}/projects/${currentProject.id}/members`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ userId: Number(inviteUserId) })
       });
-
-      if (!res.ok) throw new Error('Invitation dispatch failed');
-      const newMember = await res.json();
-
-      // Update current project member stack locally
+      if (!res.ok) throw new Error();
+      const member = await res.json();
       const updatedProj = {
         ...currentProject,
-        members: [...(currentProject.members || []), { 
-          user_id: newMember.id, 
-          username: newMember.username, 
-          avatar_color: newMember.avatar_color 
-        }]
+        members: [...(currentProject.members || []), { user_id: member.id, username: member.username, avatar_color: member.avatar_color }]
       };
-      
       setCurrentProject(updatedProj);
       setProjects(prev => prev.map(p => p.id === currentProject.id ? updatedProj : p));
-      
-      if (inviteMemberDialogRef.current) inviteMemberDialogRef.current.close();
-      showToastAlert(`Successfully added ${newMember.username} to project!`);
-    } catch (err) {
-      console.error(err);
+      setShowInvite(false);
+      showToast(`${member.username} added to project!`, 'success');
+    } catch {
+      showToast('Failed to add member', 'error');
     }
   };
 
+  // ─── Not logged in ───────────────────────────────────────────────────────
   if (!token || !user) {
     return <Auth onAuthSuccess={handleAuthSuccess} API_URL={API_URL} />;
   }
 
+  // ─── Render ──────────────────────────────────────────────────────────────
   return (
-    <div className="app-layout">
-      {/* Dynamic Collapsible Sidebar */}
+    <div className="app-root">
       <Sidebar
         isCollapsed={isSidebarCollapsed}
         setIsCollapsed={setIsSidebarCollapsed}
@@ -469,8 +409,7 @@ export default function App() {
         onLogout={handleLogout}
       />
 
-      <div className="main-wrapper">
-        {/* Top Header Controls */}
+      <div className="main-area">
         <Header
           currentProject={currentProject}
           currentView={currentView}
@@ -478,156 +417,281 @@ export default function App() {
           onMarkNotificationRead={handleMarkNotificationRead}
           onMarkAllNotificationsRead={handleMarkAllNotificationsRead}
           onSelectProjectAndTask={handleSelectProjectAndTask}
-          onAddMemberClick={handleOpenInviteDialog}
-          onNewProjectClick={() => newProjectDialogRef.current?.showModal()}
+          onAddMemberClick={handleOpenInvite}
+          onNewProjectClick={() => { setNewProjName(''); setNewProjDesc(''); setNewProjError(''); setShowNewProject(true); }}
         />
 
-        {/* View Router */}
-        <main className="content-area">
-          {currentView === 'dashboard' ? (
-            <Dashboard 
-              projects={projects} 
-              onSelectProject={(proj) => {
-                setCurrentProject(proj);
-                setCurrentView('board');
-              }}
+        <div className="content-view">
+          {currentView === 'dashboard' && (
+            <Dashboard
+              projects={projects}
               notifications={notifications}
+              onSelectProject={(proj) => { setCurrentProject(proj); setCurrentView('board'); }}
+              onNewProject={() => { setNewProjName(''); setNewProjDesc(''); setNewProjError(''); setShowNewProject(true); }}
             />
-          ) : (
+          )}
+
+          {currentView === 'board' && currentProject && (
             <ProjectBoard
               tasks={tasks}
+              currentProject={currentProject}
+              user={user}
               onMoveTask={handleMoveTask}
               onAddTask={handleAddTask}
               onSelectTask={(id) => setActiveTaskId(id)}
+              onDeleteTask={handleDeleteTask}
+              onEditProject={() => { setEditProjName(currentProject.name); setEditProjDesc(currentProject.description || ''); setShowEditProject(true); }}
+              onDeleteProject={() => setShowDeleteProject(true)}
             />
           )}
-        </main>
+
+          {currentView === 'board' && !currentProject && (
+            <div className="empty-state" style={{ height: '60vh' }}>
+              <div className="empty-icon">📋</div>
+              <div className="empty-title">No project selected</div>
+              <div className="empty-desc">Choose a project from the sidebar or create a new one to get started.</div>
+              <button className="btn btn-primary" onClick={() => setShowNewProject(true)} style={{ marginTop: 12 }}>
+                Create Project
+              </button>
+            </div>
+          )}
+
+          {currentView === 'profile' && (
+            <ProfileView
+              user={user}
+              API_URL={API_URL}
+              token={token}
+              onProfileUpdated={handleProfileUpdated}
+              onLogout={handleLogout}
+            />
+          )}
+
+          {currentView === 'settings' && (
+            <div className="animate-fade">
+              <div className="page-header">
+                <div>
+                  <h1 className="page-title">Settings</h1>
+                  <p className="page-subtitle">App preferences and workspace configuration.</p>
+                </div>
+              </div>
+              <div className="profile-section" style={{ maxWidth: 560 }}>
+                <div className="profile-section-header">
+                  <h4>🎨 Appearance</h4>
+                </div>
+                <div>
+                  <div className="settings-row">
+                    <div>
+                      <div className="settings-row-label">Dark Mode</div>
+                      <div className="settings-row-sub">Always on — optimized for focus</div>
+                    </div>
+                    <label className="toggle-wrap">
+                      <div className="toggle on" />
+                    </label>
+                  </div>
+                  <div className="settings-row">
+                    <div>
+                      <div className="settings-row-label">Compact View</div>
+                      <div className="settings-row-sub">Reduce card spacing on boards</div>
+                    </div>
+                    <label className="toggle-wrap">
+                      <div className="toggle" />
+                    </label>
+                  </div>
+                </div>
+              </div>
+              <div className="profile-section" style={{ maxWidth: 560, marginTop: 16 }}>
+                <div className="profile-section-header">
+                  <h4>🔔 Notifications</h4>
+                </div>
+                <div>
+                  <div className="settings-row">
+                    <div>
+                      <div className="settings-row-label">Task Assignments</div>
+                      <div className="settings-row-sub">Get notified when tasks are assigned to you</div>
+                    </div>
+                    <label className="toggle-wrap">
+                      <div className="toggle on" />
+                    </label>
+                  </div>
+                  <div className="settings-row">
+                    <div>
+                      <div className="settings-row-label">New Comments</div>
+                      <div className="settings-row-sub">Get notified on task comments</div>
+                    </div>
+                    <label className="toggle-wrap">
+                      <div className="toggle on" />
+                    </label>
+                  </div>
+                  <div className="settings-row" style={{ borderBottom: 'none' }}>
+                    <div>
+                      <div className="settings-row-label">Project Invites</div>
+                      <div className="settings-row-sub">Get notified when added to a project</div>
+                    </div>
+                    <label className="toggle-wrap">
+                      <div className="toggle on" />
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Floating Push Toast (Slide-in alert) */}
-      {toast && (
-        <div style={{
-          position: 'fixed',
-          bottom: '24px',
-          right: '24px',
-          backgroundColor: 'var(--bg-card)',
-          border: '1px solid var(--primary)',
-          borderRadius: '10px',
-          padding: '16px 20px',
-          boxShadow: 'var(--box-shadow)',
-          zIndex: 999,
-          maxWidth: '320px',
-          animation: 'slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-          display: 'flex',
-          gap: '12px',
-          alignItems: 'center'
-        }}>
-          <style>{`
-            @keyframes slideInRight {
-              from { transform: translateX(110%); opacity: 0; }
-              to { transform: translateX(0); opacity: 1; }
-            }
-          `}</style>
-          <div style={{ fontSize: '1.25rem' }}>🔔</div>
-          <div style={{ fontSize: '0.85rem', lineHeight: '1.4', color: 'var(--text-main)' }}>
-            {toast}
-          </div>
-        </div>
-      )}
-
-      {/* Card Details Overlay */}
+      {/* ── TASK DETAIL MODAL ── */}
       {activeTaskId && (
         <TaskModal
+          key={activeTaskId}
           taskId={activeTaskId}
           onClose={() => setActiveTaskId(null)}
           API_URL={API_URL}
           token={token}
-          projectMembers={currentProject ? (currentProject.members || []) : []}
+          projectMembers={currentProject?.members || []}
           onTaskUpdated={handleTaskUpdated}
         />
       )}
 
-      {/* New Project Dialog Modal */}
-      <dialog ref={newProjectDialogRef} className="modal-wrapper" onClose={() => newProjectDialogRef.current?.close()}>
-        <button className="modal-close-btn" onClick={() => newProjectDialogRef.current?.close()}>
-          <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-        <div className="modal-header">
-          <h2>Create New Project</h2>
-        </div>
-        <form onSubmit={handleCreateProject} className="modal-body">
-          <div className="form-group">
-            <label htmlFor="proj-name">Project Name</label>
-            <input
-              id="proj-name"
-              type="text"
-              className="form-input"
-              placeholder="e.g. Website Overhaul"
-              value={newProjName}
-              onChange={(e) => setNewProjName(e.target.value)}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="proj-desc">Description</label>
-            <textarea
-              id="proj-desc"
-              className="form-input"
-              style={{ minHeight: '80px', resize: 'vertical' }}
-              placeholder="Provide a brief summary of the workspace goals..."
-              value={newProjDesc}
-              onChange={(e) => setNewProjDesc(e.target.value)}
-            />
-          </div>
-          <button type="submit" className="auth-btn" style={{ marginTop: '10px' }}>Create Project</button>
-        </form>
-      </dialog>
+      {/* ── NEW PROJECT MODAL ── */}
+      {showNewProject && (
+        <ModalDialog
+          id="new-project-dialog"
+          title="Create New Project"
+          onClose={() => setShowNewProject(false)}
+          footer={
+            <>
+              <button className="btn btn-ghost" onClick={() => setShowNewProject(false)} id="cancel-new-project">Cancel</button>
+              <button className="btn btn-primary" form="new-project-form" type="submit" id="submit-new-project">Create Project</button>
+            </>
+          }
+        >
+          {newProjError && <div className="error-banner"><svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path strokeLinecap="round" d="M12 8v4m0 4h.01"/></svg>{newProjError}</div>}
+          <form id="new-project-form" onSubmit={handleCreateProject} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div className="form-field">
+              <label className="form-label" htmlFor="new-proj-name">Project Name <span style={{ color: 'var(--red)' }}>*</span></label>
+              <input
+                id="new-proj-name" className="form-input"
+                placeholder="e.g. Website Redesign"
+                value={newProjName}
+                onChange={e => { setNewProjError(''); setNewProjName(e.target.value); }}
+                autoFocus required
+              />
+            </div>
+            <div className="form-field">
+              <label className="form-label" htmlFor="new-proj-desc">Description</label>
+              <textarea
+                id="new-proj-desc" className="form-input"
+                placeholder="Brief summary of the project goals…"
+                value={newProjDesc}
+                onChange={e => setNewProjDesc(e.target.value)}
+                style={{ minHeight: 80, resize: 'vertical' }}
+              />
+            </div>
+          </form>
+        </ModalDialog>
+      )}
 
-      {/* Invite Member Dialog Modal */}
-      <dialog ref={inviteMemberDialogRef} className="modal-wrapper" onClose={() => inviteMemberDialogRef.current?.close()}>
-        <button className="modal-close-btn" onClick={() => inviteMemberDialogRef.current?.close()}>
-          <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-        <div className="modal-header">
-          <h2>Invite Team Member</h2>
-        </div>
-        <form onSubmit={handleInviteSubmit} className="modal-body">
-          <div className="form-group">
-            <label htmlFor="member-select">Select User</label>
-            <div className="select-wrapper">
-              {systemUsers.length > 0 ? (
+      {/* ── EDIT PROJECT MODAL ── */}
+      {showEditProject && (
+        <ModalDialog
+          id="edit-project-dialog"
+          title="Edit Project"
+          onClose={() => setShowEditProject(false)}
+          footer={
+            <>
+              <button className="btn btn-ghost" onClick={() => setShowEditProject(false)} id="cancel-edit-project">Cancel</button>
+              <button className="btn btn-primary" form="edit-project-form" type="submit" id="submit-edit-project">Save Changes</button>
+            </>
+          }
+        >
+          <form id="edit-project-form" onSubmit={handleEditProject} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div className="form-field">
+              <label className="form-label" htmlFor="edit-proj-name">Project Name</label>
+              <input
+                id="edit-proj-name" className="form-input"
+                value={editProjName}
+                onChange={e => setEditProjName(e.target.value)}
+                required autoFocus
+              />
+            </div>
+            <div className="form-field">
+              <label className="form-label" htmlFor="edit-proj-desc">Description</label>
+              <textarea
+                id="edit-proj-desc" className="form-input"
+                value={editProjDesc}
+                onChange={e => setEditProjDesc(e.target.value)}
+                style={{ minHeight: 80, resize: 'vertical' }}
+              />
+            </div>
+          </form>
+        </ModalDialog>
+      )}
+
+      {/* ── DELETE PROJECT CONFIRM ── */}
+      {showDeleteProject && (
+        <ModalDialog
+          id="delete-project-dialog"
+          title="Delete Project"
+          onClose={() => setShowDeleteProject(false)}
+          size="sm"
+          footer={
+            <>
+              <button className="btn btn-ghost" onClick={() => setShowDeleteProject(false)} id="cancel-delete-project">Cancel</button>
+              <button className="btn btn-danger" onClick={handleDeleteProject} id="confirm-delete-project">Yes, Delete</button>
+            </>
+          }
+        >
+          <div style={{ textAlign: 'center', padding: '8px 0' }}>
+            <div style={{ fontSize: '2rem', marginBottom: 12 }}>⚠️</div>
+            <p style={{ fontSize: '0.9rem', lineHeight: 1.6 }}>
+              Are you sure you want to delete <strong>"{currentProject?.name}"</strong>?
+              <br />This will permanently remove all tasks and cannot be undone.
+            </p>
+          </div>
+        </ModalDialog>
+      )}
+
+      {/* ── INVITE MEMBER MODAL ── */}
+      {showInvite && (
+        <ModalDialog
+          id="invite-member-dialog"
+          title="Invite Team Member"
+          onClose={() => setShowInvite(false)}
+          footer={
+            <>
+              <button className="btn btn-ghost" onClick={() => setShowInvite(false)} id="cancel-invite">Cancel</button>
+              <button className="btn btn-primary" form="invite-form" type="submit" disabled={systemUsers.length === 0} id="submit-invite">
+                Send Invite
+              </button>
+            </>
+          }
+        >
+          <form id="invite-form" onSubmit={handleInviteSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {systemUsers.length === 0 ? (
+              <div className="empty-state" style={{ padding: '20px 0' }}>
+                <div className="empty-icon">👥</div>
+                <div className="empty-desc">All registered users are already members of this project.</div>
+              </div>
+            ) : (
+              <div className="form-field">
+                <label className="form-label" htmlFor="invite-user-select">Select User</label>
                 <select
-                  id="member-select"
-                  className="select-dropdown"
+                  id="invite-user-select"
+                  className="form-input"
                   value={inviteUserId}
-                  onChange={(e) => setInviteUserId(e.target.value)}
-                  required
+                  onChange={e => setInviteUserId(e.target.value)}
                 >
                   {systemUsers.map(u => (
-                    <option key={u.id} value={u.id}>{u.username} ({u.email})</option>
+                    <option key={u.id} value={u.id}>{u.username} — {u.email}</option>
                   ))}
                 </select>
-              ) : (
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-disabled)', fontStyle: 'italic', padding: '10px 0' }}>
-                  No other users available to invite to this project.
-                </div>
-              )}
-            </div>
-          </div>
-          <button 
-            type="submit" 
-            className="auth-btn" 
-            style={{ marginTop: '10px' }} 
-            disabled={systemUsers.length === 0}
-          >
-            Invite Member
-          </button>
-        </form>
-      </dialog>
+              </div>
+            )}
+          </form>
+        </ModalDialog>
+      )}
+
+      {/* ── TOASTS ── */}
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </div>
   );
 }
