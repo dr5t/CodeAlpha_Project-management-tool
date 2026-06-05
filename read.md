@@ -19,8 +19,8 @@
 </p>
 
 <p align="center">
-  <a href="https://agilespace.render.com">
-    <img src="https://img.shields.io/badge/LIVE_WEBSITE-AGILESPACE.RENDER.COM-34d399?style=flat-square&labelColor=374151" alt="Live Website" />
+  <a href="https://agilespace.onrender.com">
+    <img src="https://img.shields.io/badge/LIVE_WEBSITE-AGILESPACE.ONRENDER.COM-34d399?style=flat-square&labelColor=374151" alt="Live Website" />
   </a>
 </p>
 
@@ -40,7 +40,7 @@ AgileSpace is a premium, full-stack, state-of-the-art project management dashboa
 
 AgileSpace operates on a **Unified Workspace Architecture**, ensuring that board changes, task movements, comments, and team invites are broadcasted instantaneously to all online members.
 
-👉 **[Live Demo](https://agilespace.render.com)** 👈
+👉 **[Live Demo](https://agilespace.onrender.com)** 👈
 
 ---
 
