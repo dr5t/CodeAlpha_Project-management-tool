@@ -1,6 +1,16 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Telegram-Animated-Emojis/main/Objects/Clipboard.webp" alt="Clipboard" width="110" height="110" />
+  <svg width="128" height="128" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="200" height="200" rx="44" fill="#081c3c" />
+    <path d="M 35 140 C 35 140 70 140 85 140 C 60 115 50 75 75 50 C 100 25 140 30 160 60 C 170 75 172 90 168 105 C 160 128 135 142 110 140" stroke="#3b82f6" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M 72 120 L 165 40" stroke="#3b82f6" stroke-width="16" stroke-linecap="round" />
+    <path d="M 130 38 L 168 37 L 167 75" stroke="#3b82f6" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M 92 78 L 118 78" stroke="#ffffff" stroke-width="12" stroke-linecap="round" />
+    <path d="M 125 102 L 138 114" stroke="#ffffff" stroke-width="12" stroke-linecap="round" />
+    <path d="M 128 146 L 168 146" stroke="#ffffff" stroke-width="12" stroke-linecap="round" />
+    <path d="M 154 136 L 168 146 L 154 156" stroke="#ffffff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" />
+  </svg>
 </p>
+
 
 <h1 align="center">🌌 AgileSpace</h1>
 
