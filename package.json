@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Collaborative project management tool similarity to Trello",
   "main": "backend/server.js",
+  "engines": {
+    "node": "20.x"
+  },
   "scripts": {
     "install:all": "npm install && npm install --prefix backend && npm install --prefix frontend",
     "dev:backend": "node backend/server.js",
