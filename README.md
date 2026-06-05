@@ -1,13 +1,14 @@
 <p align="center">
   <svg width="128" height="128" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect width="200" height="200" rx="44" fill="#081c3c" />
-    <path d="M 35 140 C 35 140 70 140 85 140 C 60 115 50 75 75 50 C 100 25 140 30 160 60 C 170 75 172 90 168 105 C 160 128 135 142 110 140" stroke="#3b82f6" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" />
-    <path d="M 72 120 L 165 40" stroke="#3b82f6" stroke-width="16" stroke-linecap="round" />
-    <path d="M 130 38 L 168 37 L 167 75" stroke="#3b82f6" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" />
-    <path d="M 92 78 L 118 78" stroke="#ffffff" stroke-width="12" stroke-linecap="round" />
-    <path d="M 125 102 L 138 114" stroke="#ffffff" stroke-width="12" stroke-linecap="round" />
-    <path d="M 128 146 L 168 146" stroke="#ffffff" stroke-width="12" stroke-linecap="round" />
-    <path d="M 154 136 L 168 146 L 154 156" stroke="#ffffff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M 22 140 L 85 140 C 60 115 50 75 75 50 C 100 25 140 30 160 60 C 170 75 172 90 168 105 C 160 128 135 142 110 140" stroke="#3b82f6" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" />
+    <path d="M 105 62 L 126 118" stroke="#ffffff" stroke-width="15" stroke-linecap="round" />
+    <path d="M 72 120 L 148 54" stroke="#3b82f6" stroke-width="16" stroke-linecap="round" />
+    <polygon points="170,35 125,41 161,77" fill="#3b82f6" />
+    <path d="M 84 118 L 105 62" stroke="#ffffff" stroke-width="15" stroke-linecap="round" />
+    <path d="M 94 92 L 103 92" stroke="#ffffff" stroke-width="12" stroke-linecap="round" />
+    <path d="M 124 144 L 152 144" stroke="#ffffff" stroke-width="12" stroke-linecap="round" />
+    <polygon points="170,144 148,131 148,157" fill="#ffffff" />
   </svg>
 </p>
 
