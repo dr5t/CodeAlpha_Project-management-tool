@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      background-color: #121212;
+      color: white;
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .comparison {
+      display: flex;
+      gap: 40px;
+      margin-bottom: 20px;
+    }
+    .box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #1e1e1e;
+      padding: 20px;
+      border-radius: 12px;
+      border: 1px solid #333;
+    }
+    .box img, .box svg {
+      width: 200px;
+      height: 200px;
+      border-radius: 44px;
+    }
+    .label {
+      margin-top: 10px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h2>Logo Visual Comparison</h2>
+  <div class="comparison">
+    <div class="box">
+      <img src="file:///Users/shauryatiwari/.gemini/antigravity-ide/brain/38ea7a7c-aa1a-4749-8744-11c8598ca3e1/media__1780631293293.png" alt="Original Logo" />
+      <div class="label">Original Uploaded Logo</div>
+    </div>
+    <div class="box">
+      <!-- Proposed SVG V5 -->
+      <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="200" height="200" rx="44" fill="#081c3c"/>
+        
+        <!-- 1. Circle loop (Blue) -->
+        <path d="M 22 140 L 85 140 C 60 115 50 75 75 50 C 100 25 140 30 160 60 C 170 75 172 90 168 105 C 160 128 135 142 110 140" stroke="#3b82f6" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+        
+        <!-- 2. White Right Leg of A (drawn behind blue arrow) -->
+        <path d="M 105 62 L 126 118" stroke="#ffffff" stroke-width="15" stroke-linecap="round"/>
+        
+        <!-- 3. Blue Diagonal Arrow Line -->
+        <path d="M 72 120 L 148 54" stroke="#3b82f6" stroke-width="16" stroke-linecap="round"/>
+        <!-- Blue Diagonal Arrow Head (sharp polygon) -->
+        <polygon points="170,35 125,41 161,77" fill="#3b82f6" />
+        
+        <!-- 4. White Left Leg of A & Crossbar stub (drawn on top of blue arrow) -->
+        <path d="M 84 118 L 105 62" stroke="#ffffff" stroke-width="15" stroke-linecap="round"/>
+        <path d="M 94 92 L 103 92" stroke="#ffffff" stroke-width="12" stroke-linecap="round"/>
+        
+        <!-- 5. White bottom-right arrow -->
+        <path d="M 124 144 L 152 144" stroke="#ffffff" stroke-width="12" stroke-linecap="round"/>
+        <polygon points="170,144 148,131 148,157" fill="#ffffff" />
+      </svg>
+      <div class="label">Proposed SVG V5</div>
+    </div>
+  </div>
+</body>
+</html>
