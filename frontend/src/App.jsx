@@ -6,7 +6,7 @@ import Dashboard from './components/Dashboard';
 import ProjectBoard from './components/ProjectBoard';
 import TaskModal from './components/TaskModal';
 import ProfileView from './components/ProfileView';
-import { Icons } from './components/Avatar';
+import { Icons } from './components/Icons';
 
 const API_URL = window.location.port === '5173' ? 'http://localhost:5001/api' : '/api';
 

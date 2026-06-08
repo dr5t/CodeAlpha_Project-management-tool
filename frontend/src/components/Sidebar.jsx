@@ -1,5 +1,6 @@
 import AgileSpaceLogo from './AgileSpaceLogo';
-import { Avatar, Icons } from './Avatar';
+import { Avatar } from './Avatar';
+import { Icons } from './Icons';
 
 const NAV = [
   { id: 'dashboard', label: 'Dashboard', icon: <Icons.Dashboard /> },
