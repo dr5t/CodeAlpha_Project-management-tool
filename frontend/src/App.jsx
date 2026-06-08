@@ -74,6 +74,44 @@ export default function App() {
   const [activeTaskId, setActiveTaskId] = useState(null);
   const [toasts, setToasts] = useState([]);
 
+  const [settings, setSettings] = useState(() => {
+    try {
+      const saved = localStorage.getItem('settings');
+      return saved ? JSON.parse(saved) : {
+        darkMode: true,
+        compactView: false,
+        taskAssignments: true,
+        newComments: true,
+        projectInvites: true
+      };
+    } catch {
+      return {
+        darkMode: true,
+        compactView: false,
+        taskAssignments: true,
+        newComments: true,
+        projectInvites: true
+      };
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('settings', JSON.stringify(settings));
+    } catch (e) {
+      console.error(e);
+    }
+    if (settings.darkMode) {
+      document.documentElement.classList.remove('light-mode');
+    } else {
+      document.documentElement.classList.add('light-mode');
+    }
+  }, [settings]);
+
+  const toggleSetting = (key) => {
+    setSettings(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
   const [showNewProject, setShowNewProject]   = useState(false);
   const [showInvite, setShowInvite]           = useState(false);
   const [showEditProject, setShowEditProject] = useState(false);
@@ -449,17 +487,19 @@ export default function App() {
           )}
 
           {currentView === 'board' && currentProject && (
-            <ProjectBoard
-              tasks={tasks}
-              currentProject={currentProject}
-              user={user}
-              onMoveTask={handleMoveTask}
-              onAddTask={handleAddTask}
-              onSelectTask={(id) => setActiveTaskId(id)}
-              onDeleteTask={handleDeleteTask}
-              onEditProject={() => { setEditProjName(currentProject.name); setEditProjDesc(currentProject.description || ''); setShowEditProject(true); }}
-              onDeleteProject={() => setShowDeleteProject(true)}
-            />
+            <div className={settings.compactView ? 'compact-board-container' : ''} style={{ height: '100%', overflow: 'hidden' }}>
+              <ProjectBoard
+                tasks={tasks}
+                currentProject={currentProject}
+                user={user}
+                onMoveTask={handleMoveTask}
+                onAddTask={handleAddTask}
+                onSelectTask={(id) => setActiveTaskId(id)}
+                onDeleteTask={handleDeleteTask}
+                onEditProject={() => { setEditProjName(currentProject.name); setEditProjDesc(currentProject.description || ''); setShowEditProject(true); }}
+                onDeleteProject={() => setShowDeleteProject(true)}
+              />
+            </div>
           )}
 
           {currentView === 'board' && !currentProject && (
@@ -501,10 +541,10 @@ export default function App() {
                   <div className="settings-row">
                     <div>
                       <div className="settings-row-label">Dark Mode</div>
-                      <div className="settings-row-sub">Always on — optimized for focus</div>
+                      <div className="settings-row-sub">Toggle dark or light theme</div>
                     </div>
-                    <label className="toggle-wrap">
-                      <div className="toggle on" />
+                    <label className="toggle-wrap" onClick={() => toggleSetting('darkMode')}>
+                      <div className={`toggle${settings.darkMode ? ' on' : ''}`} />
                     </label>
                   </div>
                   <div className="settings-row">
@@ -512,8 +552,8 @@ export default function App() {
                       <div className="settings-row-label">Compact View</div>
                       <div className="settings-row-sub">Reduce card spacing on boards</div>
                     </div>
-                    <label className="toggle-wrap">
-                      <div className="toggle" />
+                    <label className="toggle-wrap" onClick={() => toggleSetting('compactView')}>
+                      <div className={`toggle${settings.compactView ? ' on' : ''}`} />
                     </label>
                   </div>
                 </div>
@@ -528,8 +568,8 @@ export default function App() {
                       <div className="settings-row-label">Task Assignments</div>
                       <div className="settings-row-sub">Get notified when tasks are assigned to you</div>
                     </div>
-                    <label className="toggle-wrap">
-                      <div className="toggle on" />
+                    <label className="toggle-wrap" onClick={() => toggleSetting('taskAssignments')}>
+                      <div className={`toggle${settings.taskAssignments ? ' on' : ''}`} />
                     </label>
                   </div>
                   <div className="settings-row">
@@ -537,8 +577,8 @@ export default function App() {
                       <div className="settings-row-label">New Comments</div>
                       <div className="settings-row-sub">Get notified on task comments</div>
                     </div>
-                    <label className="toggle-wrap">
-                      <div className="toggle on" />
+                    <label className="toggle-wrap" onClick={() => toggleSetting('newComments')}>
+                      <div className={`toggle${settings.newComments ? ' on' : ''}`} />
                     </label>
                   </div>
                   <div className="settings-row" style={{ borderBottom: 'none' }}>
@@ -546,8 +586,8 @@ export default function App() {
                       <div className="settings-row-label">Project Invites</div>
                       <div className="settings-row-sub">Get notified when added to a project</div>
                     </div>
-                    <label className="toggle-wrap">
-                      <div className="toggle on" />
+                    <label className="toggle-wrap" onClick={() => toggleSetting('projectInvites')}>
+                      <div className={`toggle${settings.projectInvites ? ' on' : ''}`} />
                     </label>
                   </div>
                 </div>
