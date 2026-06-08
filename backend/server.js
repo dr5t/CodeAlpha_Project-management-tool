@@ -30,7 +30,7 @@ const avatarStorage = multer.diskStorage({
   },
   filename(req, file, cb) {
     const ext = path.extname(file.originalname).toLowerCase();
-    cb(null, `avatar_${req.user?.id || Date.now()}${ext}`);
+    cb(null, `avatar_${req.user?.id || Date.now()}_${Date.now()}${ext}`);
   }
 });
 const avatarUpload = multer({
