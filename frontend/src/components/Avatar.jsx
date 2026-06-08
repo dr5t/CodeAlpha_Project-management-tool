@@ -1,4 +1,4 @@
-import { Icons, AVATAR_COLORS } from './Icons';
+
 
 export function Avatar({ user, size = 'md', onClick, className = '', style = {} }) {
   const sizeMap = { xs: 22, sm: 28, md: 36, lg: 48, xl: 72, '2xl': 96 };
