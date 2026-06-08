@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Icons } from './Avatar';
+import { Icons } from './Icons';
 
 function timeAgo(dateStr) {
   if (!dateStr) return '';
