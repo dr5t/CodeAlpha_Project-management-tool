@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Icons } from './Avatar';
+import { Icons } from './Icons';
 
 function timeAgo(dateStr) {
   const diff = Date.now() - new Date(dateStr).getTime();
