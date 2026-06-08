@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
-import { Avatar, AvatarEditable, Icons, AVATAR_COLORS } from './Avatar';
+import { Avatar, AvatarEditable } from './Avatar';
+import { Icons, AVATAR_COLORS } from './Icons';
 
 export default function ProfileView({ user, API_URL, token, onProfileUpdated, onLogout }) {
   const [tab, setTab] = useState('profile');
