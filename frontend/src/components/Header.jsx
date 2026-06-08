@@ -36,7 +36,6 @@ export default function Header({
   const notifRef = useRef(null);
   const unread = notifications.filter(n => !n.is_read).length;
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(e) {
       if (notifRef.current && !notifRef.current.contains(e.target)) {
@@ -62,7 +61,6 @@ export default function Header({
 
   return (
     <header className="app-header">
-      {/* Breadcrumb */}
       <div className="header-breadcrumb">
         {crumbs.map((c, i) => (
           <React.Fragment key={i}>
@@ -72,7 +70,6 @@ export default function Header({
         ))}
       </div>
 
-      {/* Actions */}
       <div className="header-actions">
         {currentView === 'board' && currentProject && (
           <>
@@ -104,7 +101,6 @@ export default function Header({
           New Project
         </button>
 
-        {/* Notification bell */}
         <div style={{ position: 'relative' }} ref={notifRef}>
           <button
             id="btn-notifications"

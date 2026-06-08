@@ -6,7 +6,6 @@ const { query } = require('../db');
 
 const JWT_SECRET = 'project-manager-secret-token-key-2026';
 
-// Middleware to verify JWT token
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -20,13 +19,11 @@ function authenticateToken(req, res, next) {
   });
 }
 
-// Helper to select random color for user avatar
 const AVATAR_COLORS = [
   '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', 
   '#ef4444', '#06b6d4', '#84cc16', '#14b8a6', '#6366f1'
 ];
 
-// Register endpoint
 router.post('/register', async (req, res) => {
   const { username, email, password } = req.body;
 
@@ -35,7 +32,6 @@ router.post('/register', async (req, res) => {
   }
 
   try {
-    // Check if user exists
     const existingUser = await query.get(
       'SELECT * FROM users WHERE email = ? OR username = ?',
       [email, username]
@@ -45,11 +41,9 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'Username or email already registered' });
     }
 
-    // Hash password
     const passwordHash = await bcrypt.hash(password, 10);
     const color = AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)];
 
-    // Insert user
     const insertResult = await query.run(
       'INSERT INTO users (username, email, password_hash, avatar_color) VALUES (?, ?, ?, ?)',
       [username.toLowerCase().trim(), email.toLowerCase().trim(), passwordHash, color]
@@ -63,7 +57,6 @@ router.post('/register', async (req, res) => {
       avatar_url: null
     };
 
-    // Generate Token
     const token = jwt.sign(user, JWT_SECRET, { expiresIn: '7d' });
 
     res.status(201).json({ user, token });
@@ -73,7 +66,6 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// Login endpoint
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
@@ -113,7 +105,6 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Get current user details
 router.get('/me', authenticateToken, async (req, res) => {
   try {
     const userRow = await query.get(
@@ -129,7 +120,6 @@ router.get('/me', authenticateToken, async (req, res) => {
   }
 });
 
-// List all system users
 router.get('/users', authenticateToken, async (req, res) => {
   try {
     const usersList = await query.all(
@@ -141,13 +131,11 @@ router.get('/users', authenticateToken, async (req, res) => {
   }
 });
 
-// Update profile (username, email, avatar_color)
 router.put('/profile', authenticateToken, async (req, res) => {
   const { username, email, avatar_color } = req.body;
   if (!username || !email) return res.status(400).json({ error: 'Username and email are required' });
 
   try {
-    // Check uniqueness excluding current user
     const conflict = await query.get(
       'SELECT id FROM users WHERE (email = ? OR username = ?) AND id != ?',
       [email.toLowerCase().trim(), username.toLowerCase().trim(), req.user.id]
@@ -177,7 +165,6 @@ router.put('/profile', authenticateToken, async (req, res) => {
   }
 });
 
-// Change password
 router.patch('/profile/password', authenticateToken, async (req, res) => {
   const { currentPassword, newPassword } = req.body;
   if (!currentPassword || !newPassword) return res.status(400).json({ error: 'Both passwords required' });
@@ -197,7 +184,6 @@ router.patch('/profile/password', authenticateToken, async (req, res) => {
   }
 });
 
-// Delete account
 router.delete('/profile', authenticateToken, async (req, res) => {
   try {
     await query.run('DELETE FROM users WHERE id = ?', [req.user.id]);

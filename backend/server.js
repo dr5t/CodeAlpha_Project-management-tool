@@ -21,11 +21,9 @@ initSocket(server);
 app.use(cors());
 app.use(express.json());
 
-// Serve uploaded avatars as static files
 const uploadsPath = path.join(__dirname, 'uploads');
 app.use('/uploads', express.static(uploadsPath));
 
-// ── Multer config for avatar uploads ─────────────────────────────────────────
 const avatarStorage = multer.diskStorage({
   destination(req, file, cb) {
     cb(null, path.join(__dirname, 'uploads/avatars'));
@@ -46,7 +44,6 @@ const avatarUpload = multer({
   }
 });
 
-// POST /api/auth/profile/avatar — Upload profile picture
 app.post('/api/auth/profile/avatar', authenticateToken, avatarUpload.single('avatar'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No image file provided' });
   try {
@@ -63,7 +60,6 @@ app.post('/api/auth/profile/avatar', authenticateToken, avatarUpload.single('ava
   }
 });
 
-// DELETE /api/auth/profile/avatar — Remove profile picture
 app.delete('/api/auth/profile/avatar', authenticateToken, async (req, res) => {
   try {
     await query.run('UPDATE users SET avatar_url = NULL WHERE id = ?', [req.user.id]);
@@ -73,14 +69,12 @@ app.delete('/api/auth/profile/avatar', authenticateToken, async (req, res) => {
   }
 });
 
-// API Endpoint routing
 app.use('/api/auth', authRouter);
 app.use('/api/projects', projectsRouter);
 app.use('/api/tasks', tasksRouter);
 app.use('/api/comments', commentsRouter);
 app.use('/api/notifications', notificationsRouter);
 
-// Serve static frontend assets if built
 const frontendDistPath = path.join(__dirname, '../frontend/dist');
 app.use(express.static(frontendDistPath));
 

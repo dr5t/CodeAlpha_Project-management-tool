@@ -24,13 +24,11 @@ export default function Sidebar({
 
   return (
     <aside className={`sidebar${isCollapsed ? ' collapsed' : ''}`} id="app-sidebar">
-      {/* Brand */}
       <div className="sidebar-brand">
         <AgileSpaceLogo size={32} />
         <span className="brand-name">AgileSpace</span>
       </div>
 
-      {/* Nav scroll */}
       <nav className="sidebar-scroll">
         {NAV.map(item => (
           <button
@@ -45,7 +43,6 @@ export default function Sidebar({
           </button>
         ))}
 
-        {/* Projects section */}
         <div className="nav-section-label">Projects</div>
 
         {projects.length === 0 && !isCollapsed && (
@@ -74,7 +71,6 @@ export default function Sidebar({
         ))}
       </nav>
 
-      {/* User footer */}
       <div className="sidebar-footer">
         <div
           className="user-card"

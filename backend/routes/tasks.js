@@ -4,11 +4,9 @@ const { query } = require('../db');
 const { authenticateToken } = require('./auth');
 const { broadcastToProject, sendNotificationToUser } = require('../socketHandler');
 
-// GET /projects/:projectId/tasks - Get all tasks in a project
 router.get('/project/:projectId', authenticateToken, async (req, res) => {
   const projectId = req.params.projectId;
   try {
-    // Verify membership
     const membership = await query.get(
       'SELECT 1 FROM project_members pm JOIN projects p ON p.id = pm.project_id WHERE p.id = ? AND (p.owner_id = ? OR pm.user_id = ?)',
       [projectId, req.user.id, req.user.id]
@@ -35,7 +33,6 @@ router.get('/project/:projectId', authenticateToken, async (req, res) => {
   }
 });
 
-// POST /projects/:projectId/tasks - Create a new task
 router.post('/project/:projectId', authenticateToken, async (req, res) => {
   const projectId = req.params.projectId;
   const { title, description, status, priority, due_date, assignee_id } = req.body;
@@ -48,7 +45,6 @@ router.post('/project/:projectId', authenticateToken, async (req, res) => {
   const taskPriority = priority || 'medium';
 
   try {
-    // Verify membership
     const membership = await query.get(
       'SELECT 1 FROM project_members pm JOIN projects p ON p.id = pm.project_id WHERE p.id = ? AND (p.owner_id = ? OR pm.user_id = ?)',
       [projectId, req.user.id, req.user.id]
@@ -58,7 +54,6 @@ router.post('/project/:projectId', authenticateToken, async (req, res) => {
       return res.status(403).json({ error: 'Unauthorized to add tasks' });
     }
 
-    // Get max position for column status
     const posResult = await query.get(
       'SELECT MAX(position) as maxPos FROM tasks WHERE project_id = ? AND status = ?',
       [projectId, taskStatus]
@@ -72,7 +67,6 @@ router.post('/project/:projectId', authenticateToken, async (req, res) => {
 
     const taskId = result.id;
 
-    // Fetch newly created task with assignee name
     const newTask = await query.get(`
       SELECT t.id, t.project_id, t.title, t.description, t.status, t.priority, t.due_date, t.assignee_id, t.position, t.created_at,
              u.username as assignee_name, u.avatar_color as assignee_color, u.avatar_url as assignee_avatar_url, 0 as comment_count
@@ -81,7 +75,6 @@ router.post('/project/:projectId', authenticateToken, async (req, res) => {
       WHERE t.id = ?
     `, [taskId]);
 
-    // Send notifications if user is assigned
     if (assignee_id && Number(assignee_id) !== Number(req.user.id)) {
       const project = await query.get('SELECT name FROM projects WHERE id = ?', [projectId]);
       const msg = `You have been assigned to "${title}" in project "${project.name}" by ${req.user.username}`;
@@ -101,7 +94,6 @@ router.post('/project/:projectId', authenticateToken, async (req, res) => {
       });
     }
 
-    // Broadcast Board Update via socket
     broadcastToProject(projectId, {
       type: 'BOARD_UPDATED',
       projectId: projectId,
@@ -115,7 +107,6 @@ router.post('/project/:projectId', authenticateToken, async (req, res) => {
   }
 });
 
-// GET /tasks/:id - Fetch single task by ID
 router.get('/:id', authenticateToken, async (req, res) => {
   const taskId = req.params.id;
   try {
@@ -137,7 +128,6 @@ router.get('/:id', authenticateToken, async (req, res) => {
   }
 });
 
-
 router.put('/:id', authenticateToken, async (req, res) => {
   const taskId = req.params.id;
   const { title, description, status, priority, due_date, assignee_id } = req.body;
@@ -154,7 +144,6 @@ router.put('/:id', authenticateToken, async (req, res) => {
 
     const projectId = task.project_id;
 
-    // Verify membership
     const membership = await query.get(
       'SELECT 1 FROM project_members pm JOIN projects p ON p.id = pm.project_id WHERE p.id = ? AND (p.owner_id = ? OR pm.user_id = ?)',
       [projectId, req.user.id, req.user.id]
@@ -164,18 +153,15 @@ router.put('/:id', authenticateToken, async (req, res) => {
       return res.status(403).json({ error: 'Unauthorized to update tasks' });
     }
 
-    // Check if assignee changed to trigger a notification
     const oldAssignee = task.assignee_id;
     const newAssignee = assignee_id ? Number(assignee_id) : null;
 
-    // Update DB
     await query.run(`
       UPDATE tasks 
       SET title = ?, description = ?, status = ?, priority = ?, due_date = ?, assignee_id = ?
       WHERE id = ?
     `, [title.trim(), description ? description.trim() : '', status, priority, due_date || null, newAssignee, taskId]);
 
-    // Fetch updated task
     const updatedTask = await query.get(`
       SELECT t.id, t.project_id, t.title, t.description, t.status, t.priority, t.due_date, t.assignee_id, t.position, t.created_at,
              u.username as assignee_name, u.avatar_color as assignee_color, u.avatar_url as assignee_avatar_url,
@@ -185,7 +171,6 @@ router.put('/:id', authenticateToken, async (req, res) => {
       WHERE t.id = ?
     `, [taskId]);
 
-    // If new assignee is set and is not the current user
     if (newAssignee && newAssignee !== oldAssignee && newAssignee !== Number(req.user.id)) {
       const project = await query.get('SELECT name FROM projects WHERE id = ?', [projectId]);
       const msg = `You have been assigned to "${title}" in "${project.name}" by ${req.user.username}`;
@@ -205,7 +190,6 @@ router.put('/:id', authenticateToken, async (req, res) => {
       });
     }
 
-    // Broadcast Board & Task Updates
     broadcastToProject(projectId, {
       type: 'BOARD_UPDATED',
       projectId: projectId,
@@ -225,17 +209,15 @@ router.put('/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// PUT /tasks/project/:projectId/reorder - Drag & drop card position updates
 router.put('/project/:projectId/reorder', authenticateToken, async (req, res) => {
   const projectId = req.params.projectId;
-  const { tasks } = req.body; // Array of { id, status, position }
+  const { tasks } = req.body;
 
   if (!tasks || !Array.isArray(tasks)) {
     return res.status(400).json({ error: 'Tasks array is required' });
   }
 
   try {
-    // Verify membership
     const membership = await query.get(
       'SELECT 1 FROM project_members pm JOIN projects p ON p.id = pm.project_id WHERE p.id = ? AND (p.owner_id = ? OR pm.user_id = ?)',
       [projectId, req.user.id, req.user.id]
@@ -245,8 +227,6 @@ router.put('/project/:projectId/reorder', authenticateToken, async (req, res) =>
       return res.status(403).json({ error: 'Unauthorized' });
     }
 
-    // Perform updates in serialized sequence
-    // A database transaction is best for reliability
     await query.run('BEGIN TRANSACTION');
     for (const t of tasks) {
       await query.run(
@@ -256,7 +236,6 @@ router.put('/project/:projectId/reorder', authenticateToken, async (req, res) =>
     }
     await query.run('COMMIT');
 
-    // Broadcast update to other users
     broadcastToProject(projectId, {
       type: 'BOARD_UPDATED',
       projectId: projectId,
@@ -271,7 +250,6 @@ router.put('/project/:projectId/reorder', authenticateToken, async (req, res) =>
   }
 });
 
-// DELETE /tasks/:id - Delete a task
 router.delete('/:id', authenticateToken, async (req, res) => {
   const taskId = req.params.id;
   try {
@@ -282,7 +260,6 @@ router.delete('/:id', authenticateToken, async (req, res) => {
 
     const projectId = task.project_id;
 
-    // Verify membership
     const membership = await query.get(
       'SELECT 1 FROM project_members pm JOIN projects p ON p.id = pm.project_id WHERE p.id = ? AND (p.owner_id = ? OR pm.user_id = ?)',
       [projectId, req.user.id, req.user.id]
@@ -294,7 +271,6 @@ router.delete('/:id', authenticateToken, async (req, res) => {
 
     await query.run('DELETE FROM tasks WHERE id = ?', [taskId]);
 
-    // Broadcast Board Update
     broadcastToProject(projectId, {
       type: 'BOARD_UPDATED',
       projectId: projectId,

@@ -1,7 +1,5 @@
 const ws = require('ws');
 
-// Maps to keep track of active connections
-// socketId -> { ws, userId, projectId }
 const clients = new Map();
 
 let wss;
@@ -53,7 +51,6 @@ function initSocket(server) {
     });
   });
 
-  // Heartbeat check every 30 seconds
   setInterval(() => {
     clients.forEach((client, id) => {
       if (client.ws.readyState === ws.CLOSED) {
@@ -63,7 +60,6 @@ function initSocket(server) {
   }, 30000);
 }
 
-// Broadcast updates to all clients viewing a specific project
 function broadcastToProject(projectId, messageObj) {
   if (!wss) return;
   const payload = JSON.stringify(messageObj);
@@ -76,7 +72,6 @@ function broadcastToProject(projectId, messageObj) {
   });
 }
 
-// Send real-time notification to a specific user if they are online
 function sendNotificationToUser(userId, notificationObj) {
   if (!wss) return;
   const payload = JSON.stringify({

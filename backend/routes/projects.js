@@ -4,7 +4,6 @@ const { query } = require('../db');
 const { authenticateToken } = require('./auth');
 const { sendNotificationToUser } = require('../socketHandler');
 
-// GET /projects - Get all projects current user belongs to
 router.get('/', authenticateToken, async (req, res) => {
   try {
     const projects = await query.all(`
@@ -16,7 +15,6 @@ router.get('/', authenticateToken, async (req, res) => {
       ORDER BY p.created_at DESC
     `, [req.user.id, req.user.id]);
     
-    // Fetch stats for each project
     for (const project of projects) {
       const stats = await query.get(`
         SELECT 
@@ -45,7 +43,6 @@ router.get('/', authenticateToken, async (req, res) => {
   }
 });
 
-// GET /projects/:id - Get details of a single project
 router.get('/:id', authenticateToken, async (req, res) => {
   const projectId = req.params.id;
   try {
@@ -60,7 +57,6 @@ router.get('/:id', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: 'Project not found' });
     }
 
-    // Verify member permissions
     const membership = await query.get(
       'SELECT 1 FROM project_members WHERE project_id = ? AND user_id = ?',
       [projectId, req.user.id]
@@ -70,7 +66,6 @@ router.get('/:id', authenticateToken, async (req, res) => {
       return res.status(403).json({ error: 'Unauthorized to view this project' });
     }
 
-    // Load members
     const members = await query.all(`
       SELECT u.id, u.username, u.email, u.avatar_color, u.avatar_url
       FROM project_members pm
@@ -86,7 +81,6 @@ router.get('/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// POST /projects - Create a new project
 router.post('/', authenticateToken, async (req, res) => {
   const { name, description } = req.body;
   if (!name) {
@@ -101,7 +95,6 @@ router.post('/', authenticateToken, async (req, res) => {
 
     const projectId = result.id;
 
-    // Owner is automatically added as member
     await query.run(
       'INSERT INTO project_members (project_id, user_id) VALUES (?, ?)',
       [projectId, req.user.id]
@@ -119,7 +112,6 @@ router.post('/', authenticateToken, async (req, res) => {
   }
 });
 
-// POST /projects/:id/members - Add member to project
 router.post('/:id/members', authenticateToken, async (req, res) => {
   const projectId = req.params.id;
   const { userId } = req.body;
@@ -129,13 +121,11 @@ router.post('/:id/members', authenticateToken, async (req, res) => {
   }
 
   try {
-    // Check if project exists and req.user has admin/owner rights
     const project = await query.get('SELECT owner_id, name FROM projects WHERE id = ?', [projectId]);
     if (!project) {
       return res.status(404).json({ error: 'Project not found' });
     }
 
-    // Verify requesting user is member
     const requesterMembership = await query.get(
       'SELECT 1 FROM project_members WHERE project_id = ? AND user_id = ?',
       [projectId, req.user.id]
@@ -144,7 +134,6 @@ router.post('/:id/members', authenticateToken, async (req, res) => {
       return res.status(403).json({ error: 'Only project members can invite others' });
     }
 
-    // Check if target user is already a member
     const existingMembership = await query.get(
       'SELECT 1 FROM project_members WHERE project_id = ? AND user_id = ?',
       [projectId, userId]
@@ -154,13 +143,11 @@ router.post('/:id/members', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'User is already a member of this project' });
     }
 
-    // Add member
     await query.run(
       'INSERT INTO project_members (project_id, user_id) VALUES (?, ?)',
       [projectId, userId]
     );
 
-    // Save notification for added user
     const msg = `You have been added to the project "${project.name}" by ${req.user.username}`;
     const notifyRes = await query.run(
       'INSERT INTO notifications (user_id, project_id, type, message) VALUES (?, ?, ?, ?)',
@@ -177,10 +164,8 @@ router.post('/:id/members', authenticateToken, async (req, res) => {
       created_at: new Date().toISOString()
     };
 
-    // Live Socket dispatch
     sendNotificationToUser(userId, notificationObj);
 
-    // Fetch updated user info to return
     const memberInfo = await query.get('SELECT id, username, email, avatar_color, avatar_url FROM users WHERE id = ?', [userId]);
 
     res.status(201).json(memberInfo);
@@ -190,7 +175,6 @@ router.post('/:id/members', authenticateToken, async (req, res) => {
   }
 });
 
-// PUT /projects/:id - Update project name/description (owner only)
 router.put('/:id', authenticateToken, async (req, res) => {
   const projectId = req.params.id;
   const { name, description } = req.body;
@@ -211,7 +195,6 @@ router.put('/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// DELETE /projects/:id - Delete project (owner only)
 router.delete('/:id', authenticateToken, async (req, res) => {
   const projectId = req.params.id;
   try {
@@ -227,7 +210,6 @@ router.delete('/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// DELETE /projects/:id/members/:userId - Remove member
 router.delete('/:id/members/:userId', authenticateToken, async (req, res) => {
   const { id: projectId, userId } = req.params;
   try {

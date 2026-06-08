@@ -51,7 +51,6 @@ export default function Dashboard({ projects, onSelectProject, notifications, on
         </button>
       </div>
 
-      {/* Stats */}
       <div className="stats-grid">
         {[
           { icon: <Icons.Projects s={20} />, bg: 'var(--primary-subtle)', label: 'Total Projects', value: projects.length, color: 'var(--primary-light)' },
@@ -71,9 +70,7 @@ export default function Dashboard({ projects, onSelectProject, notifications, on
         ))}
       </div>
 
-      {/* Main grid */}
       <div className="dashboard-grid">
-        {/* Projects */}
         <div className="section-card">
           <div className="section-card-header">
             <h3>Projects</h3>
@@ -115,7 +112,6 @@ export default function Dashboard({ projects, onSelectProject, notifications, on
                     </div>
                     <div className="project-tile-footer">
                       <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                        {/* Owner dot */}
                         <div style={{
                           width: 6, height: 6, borderRadius: '50%',
                           background: 'var(--primary)',
@@ -142,7 +138,6 @@ export default function Dashboard({ projects, onSelectProject, notifications, on
           )}
         </div>
 
-        {/* Activity */}
         <div className="section-card">
           <div className="section-card-header">
             <h3>Activity</h3>

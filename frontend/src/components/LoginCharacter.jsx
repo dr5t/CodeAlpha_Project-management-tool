@@ -1,9 +1,3 @@
-
-/**
- * Animated Anime-Style Developer Character.
- * Redesigned to match the pink-haired anime girl with wrapped bandage top.
- * States: 'idle', 'watching', 'shy', 'peeking'
- */
 export default function LoginCharacter({ state }) {
   const isWatching = state === 'watching';
   const isShy = state === 'shy';
@@ -21,15 +15,15 @@ export default function LoginCharacter({ state }) {
       >
         <defs>
           <linearGradient id="hair-grad" x1="100" y1="40" x2="100" y2="120" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#fbcfe8" /> {/* soft light pink highlight */}
-            <stop offset="50%" stopColor="#f472b6" /> {/* pink */}
-            <stop offset="100%" stopColor="#db2777" /> {/* shadow deep pink */}
+            <stop offset="0%" stopColor="#fbcfe8" />
+            <stop offset="50%" stopColor="#f472b6" />
+            <stop offset="100%" stopColor="#db2777" />
           </linearGradient>
           
           <linearGradient id="eye-grad" x1="82" y1="90" x2="82" y2="110" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#22d3ee" /> {/* cyan */}
-            <stop offset="60%" stopColor="#0891b2" /> {/* dark cyan */}
-            <stop offset="100%" stopColor="#0f172a" /> {/* dark iris base */}
+            <stop offset="0%" stopColor="#22d3ee" />
+            <stop offset="60%" stopColor="#0891b2" />
+            <stop offset="100%" stopColor="#0f172a" />
           </linearGradient>
           
           <linearGradient id="top-grad" x1="100" y1="170" x2="100" y2="200" gradientUnits="userSpaceOnUse">
@@ -88,7 +82,6 @@ export default function LoginCharacter({ state }) {
           }
         `}</style>
 
-        {/* Shadow */}
         <ellipse
           className="anime-shadow"
           cx="100"
@@ -99,9 +92,7 @@ export default function LoginCharacter({ state }) {
           opacity="0.18"
         />
 
-        {/* Anime Character Group */}
         <g className="anime-body-group">
-          {/* Back Hair (under shoulders, messy layers) */}
           <path
             d="M 50 90 Q 35 110, 48 135 C 55 145, 62 135, 66 125 C 68 115, 64 100, 64 90 Z"
             fill="url(#hair-grad)"
@@ -119,7 +110,6 @@ export default function LoginCharacter({ state }) {
             fill="url(#hair-grad)"
           />
 
-          {/* Shoulders & Torso - Slender outline & fill */}
           <path
             d="M 45 215 C 45 170, 70 148, 100 148 C 130 148, 155 170, 155 215 Z"
             fill="#ffe4e6"
@@ -127,20 +117,16 @@ export default function LoginCharacter({ state }) {
             strokeWidth="3.5"
           />
 
-          {/* Collarbones */}
           <path d="M 72 160 Q 88 164 95 162" stroke="#fda4af" strokeWidth="2.2" strokeLinecap="round" />
           <path d="M 128 160 Q 112 164 105 162" stroke="#fda4af" strokeWidth="2.2" strokeLinecap="round" />
 
-          {/* Wrapped-bandage Crop Top */}
           <g>
-            {/* Base top shape container */}
             <path
               d="M 54 174 C 54 174, 80 171, 100 171 C 120 171, 146 174, 146 174 L 148 200 C 148 200, 120 203, 100 203 C 80 203, 52 200, 52 200 Z"
               fill="url(#top-grad)"
               stroke="#090514"
               strokeWidth="3.5"
             />
-            {/* Bandage wrap lines */}
             <path
               d="M 54 174 C 75 178, 125 178, 146 174"
               stroke="#090514"
@@ -159,15 +145,12 @@ export default function LoginCharacter({ state }) {
               strokeWidth="2"
               fill="none"
             />
-            {/* Shading details */}
             <path d="M 53 182 L 147 184" stroke="#cbb59f" strokeWidth="1.2" fill="none" />
             <path d="M 52 191 L 148 192" stroke="#cbb59f" strokeWidth="1.2" fill="none" />
           </g>
 
-          {/* Cute belly button (navel) */}
           <line x1="100" y1="205" x2="100" y2="208" stroke="#fda4af" strokeWidth="2.5" strokeLinecap="round" />
 
-          {/* Trousers (Dark black baggy high-waisted pants) */}
           <path
             d="M 46 211 C 55 210, 145 210, 154 211 L 157 218 L 43 218 Z"
             fill="url(#pants-grad)"
@@ -175,22 +158,18 @@ export default function LoginCharacter({ state }) {
             strokeWidth="3.5"
           />
 
-          {/* Lilac/Lavender Belt */}
           <path
             d="M 50 208 C 65 207, 135 207, 150 208 L 150 213 C 135 212, 65 212, 50 213 Z"
             fill="#d8b4fe"
             stroke="#090514"
             strokeWidth="2"
           />
-          {/* Belt Loops */}
           <rect x="66" y="207" width="4" height="7" fill="#0c0a09" stroke="#090514" strokeWidth="1.2" />
           <rect x="130" y="207" width="4" height="7" fill="#0c0a09" stroke="#090514" strokeWidth="1.2" />
 
-          {/* Belt Buckle (silver center) */}
           <rect x="92" y="205" width="16" height="9" rx="2" fill="#e2e8f0" stroke="#090514" strokeWidth="2.5" />
           <line x1="100" y1="205" x2="100" y2="214" stroke="#090514" strokeWidth="2" />
 
-          {/* Neck */}
           <path
             d="M 88 128 L 88 152 Q 100 160 112 152 L 112 128 Z"
             fill="#ffe4e6"
@@ -198,7 +177,6 @@ export default function LoginCharacter({ state }) {
             strokeWidth="3"
           />
 
-          {/* Face */}
           <path
             d="M 66 94 C 66 122, 82 136, 100 136 C 118 136, 134 122, 134 94 C 134 70, 66 70, 66 94 Z"
             fill="#ffe4e6"
@@ -206,13 +184,10 @@ export default function LoginCharacter({ state }) {
             strokeWidth="3.5"
           />
 
-          {/* Rosy blush with soft Gaussian blur filter */}
           <ellipse cx="73" cy="116" rx="6" ry="3.5" fill="#fda4af" opacity="0.6" filter="url(#blush-blur)" />
           <ellipse cx="127" cy="116" rx="6" ry="3.5" fill="#fda4af" opacity="0.6" filter="url(#blush-blur)" />
 
-          {/* Left Eyeball */}
           <circle cx="82" cy="100" r="11" fill="white" stroke="#090514" strokeWidth="2.5" />
-          {/* Left Iris / Aqua Glow */}
           <g
             className="pupil"
             style={{
@@ -230,13 +205,10 @@ export default function LoginCharacter({ state }) {
             <circle cx="79.5" cy="97.2" r="2.8" fill="white" />
             <circle cx="84.5" cy="102" r="1.3" fill="white" />
           </g>
-          {/* Eyelash */}
           <path d="M 70 96 C 75 91, 89 91, 94 96" stroke="#090514" strokeWidth="3.5" strokeLinecap="round" fill="none" />
           <path d="M 92 94 L 95 91" stroke="#090514" strokeWidth="2" strokeLinecap="round" />
 
-          {/* Right Eyeball */}
           <circle cx="118" cy="100" r="11" fill="white" stroke="#090514" strokeWidth="2.5" />
-          {/* Right Iris */}
           <g
             className="pupil"
             style={{
@@ -252,11 +224,9 @@ export default function LoginCharacter({ state }) {
             <circle cx="115.5" cy="97.2" r="2.8" fill="white" />
             <circle cx="120.5" cy="102" r="1.3" fill="white" />
           </g>
-          {/* Eyelash */}
           <path d="M 106 96 C 111 91, 125 91, 130 96" stroke="#090514" strokeWidth="3.5" strokeLinecap="round" fill="none" />
           <path d="M 108 94 L 105 91" stroke="#090514" strokeWidth="2" strokeLinecap="round" />
 
-          {/* Eyebrows */}
           <path
             className="eyebrow"
             style={{ transform: isShy || isPeeking ? 'translateY(1.5px)' : 'none' }}
@@ -276,10 +246,8 @@ export default function LoginCharacter({ state }) {
             fill="none"
           />
 
-          {/* Nose */}
           <circle cx="100" cy="109" r="1.5" fill="#4c0519" />
 
-          {/* Mouth */}
           <path
             className="mouth"
             d={
@@ -295,33 +263,27 @@ export default function LoginCharacter({ state }) {
             fill="none"
           />
 
-          {/* Pink layered hair style */}
           <path d="M 64 80 Q 75 106 79 108 C 73 90, 68 82, 64 80 Z" fill="url(#hair-grad)" />
           <path d="M 78 72 Q 92 108 95 108 C 91 85, 84 76, 78 72 Z" fill="url(#hair-grad)" />
           <path d="M 122 72 Q 108 108 105 108 C 109 85, 116 76, 122 72 Z" fill="url(#hair-grad)" />
           <path d="M 136 80 Q 125 106 121 108 C 127 90, 132 82, 136 80 Z" fill="url(#hair-grad)" />
 
-          {/* Messy side bangs/locks overlaying face */}
           <path d="M 60 84 Q 50 110 56 118 C 58 110, 62 96, 60 84 Z" fill="url(#hair-grad)" />
           <path d="M 140 84 Q 150 110 144 118 C 142 110, 138 96, 140 84 Z" fill="url(#hair-grad)" />
 
-          {/* Center strands */}
           <path d="M 90 70 Q 100 95 102 96 C 98 85, 94 76, 90 70 Z" fill="url(#hair-grad)" />
           <path d="M 110 70 Q 100 95 98 96 C 102 85, 106 76, 110 70 Z" fill="url(#hair-grad)" />
           
-          {/* Main top head hair silhouette with strands sticking out */}
           <path
             d="M 62 76 C 72 58, 100 52, 128 58 C 138 68, 143 82, 141 94 C 148 76, 132 60, 100 58 C 68 60, 56 76, 62 76 Z"
             fill="url(#hair-grad)"
             stroke="#090514"
             strokeWidth="1.5"
           />
-          {/* Spikes sticking out at top/sides */}
           <path d="M 68 62 Q 54 50 66 56 Z" fill="url(#hair-grad)" stroke="#090514" strokeWidth="1.2" />
           <path d="M 132 62 Q 146 50 134 56 Z" fill="url(#hair-grad)" stroke="#090514" strokeWidth="1.2" />
           <path d="M 108 54 Q 116 38 112 50 Z" fill="url(#hair-grad)" stroke="#090514" strokeWidth="1.2" />
 
-          {/* Curly Ahoge */}
           <path
             d="M 94 56 Q 103 40 100 58"
             stroke="#db2777"
@@ -338,8 +300,6 @@ export default function LoginCharacter({ state }) {
           />
         </g>
 
-        {/* Bare Arms & Hands overlaying face */}
-        {/* Left Arm & Hand */}
         <g
           className="left-arm"
           style={{
@@ -350,7 +310,6 @@ export default function LoginCharacter({ state }) {
               : 'translate(0px, 15px) rotate(0deg)',
           }}
         >
-          {/* Bare Arm Outline */}
           <path
             d="M 22 178 Q 35 158 47 152"
             stroke="#090514"
@@ -358,7 +317,6 @@ export default function LoginCharacter({ state }) {
             strokeLinecap="round"
             fill="none"
           />
-          {/* Bare Arm Skin Fill */}
           <path
             d="M 22 178 Q 35 158 47 152"
             stroke="#ffe4e6"
@@ -367,7 +325,6 @@ export default function LoginCharacter({ state }) {
             fill="none"
           />
           
-          {/* Hand Group */}
           <g transform="translate(45, 140)">
             <path
               d="M 2 15 C 2 7, 14 7, 14 15 Z"
@@ -375,7 +332,6 @@ export default function LoginCharacter({ state }) {
               stroke="#090514"
               strokeWidth="2.5"
             />
-            {/* 4 fingers with gaps */}
             <g transform="translate(1, 1)">
               <rect x="0" y="-14" width="2.8" height="17" rx="1.4" fill="#ffe4e6" stroke="#090514" strokeWidth="1.8" />
               <rect x="4.4" y="-17" width="2.8" height="20" rx="1.4" fill="#ffe4e6" stroke="#090514" strokeWidth="1.8" />
@@ -385,7 +341,6 @@ export default function LoginCharacter({ state }) {
           </g>
         </g>
 
-        {/* Right Arm & Hand */}
         <g
           className="right-arm"
           style={{
@@ -394,7 +349,6 @@ export default function LoginCharacter({ state }) {
               : 'translate(0px, 15px) rotate(0deg)',
           }}
         >
-          {/* Bare Arm Outline */}
           <path
             d="M 178 178 Q 165 158 153 152"
             stroke="#090514"
@@ -402,7 +356,6 @@ export default function LoginCharacter({ state }) {
             strokeLinecap="round"
             fill="none"
           />
-          {/* Bare Arm Skin Fill */}
           <path
             d="M 178 178 Q 165 158 153 152"
             stroke="#ffe4e6"
@@ -411,7 +364,6 @@ export default function LoginCharacter({ state }) {
             fill="none"
           />
           
-          {/* Hand Group */}
           <g transform="translate(126, 140)">
             <path
               d="M 2 15 C 2 7, 14 7, 14 15 Z"
@@ -419,7 +371,6 @@ export default function LoginCharacter({ state }) {
               stroke="#090514"
               strokeWidth="2.5"
             />
-            {/* 4 fingers with gaps */}
             <g transform="translate(1, 1)">
               <rect x="0" y="-12" width="2.8" height="15" rx="1.4" fill="#ffe4e6" stroke="#090514" strokeWidth="1.8" />
               <rect x="4.4" y="-16" width="2.8" height="19" rx="1.4" fill="#ffe4e6" stroke="#090514" strokeWidth="1.8" />

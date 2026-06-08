@@ -11,7 +11,6 @@ const db = new sqlite3.Database(dbPath, (err) => {
   }
 });
 
-// Promisify database operations
 const query = {
   run(sql, params = []) {
     return new Promise((resolve, reject) => {
@@ -41,7 +40,6 @@ const query = {
 
 async function initDB() {
   try {
-    // 1. Create Users Table
     await query.run(`
       CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -54,12 +52,10 @@ async function initDB() {
       )
     `);
 
-    // Migration: add avatar_url if not exists (for existing databases)
     try {
       await query.run('ALTER TABLE users ADD COLUMN avatar_url TEXT DEFAULT NULL');
-    } catch (e) { /* column already exists */ }
+    } catch (e) {}
 
-    // 2. Create Projects Table
     await query.run(`
       CREATE TABLE IF NOT EXISTS projects (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -71,7 +67,6 @@ async function initDB() {
       )
     `);
 
-    // 3. Create Project Members Table (Many-to-Many)
     await query.run(`
       CREATE TABLE IF NOT EXISTS project_members (
         project_id INTEGER NOT NULL,
@@ -82,7 +77,6 @@ async function initDB() {
       )
     `);
 
-    // 4. Create Tasks Table
     await query.run(`
       CREATE TABLE IF NOT EXISTS tasks (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -100,7 +94,6 @@ async function initDB() {
       )
     `);
 
-    // 5. Create Comments Table
     await query.run(`
       CREATE TABLE IF NOT EXISTS comments (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -113,7 +106,6 @@ async function initDB() {
       )
     `);
 
-    // 6. Create Notifications Table
     await query.run(`
       CREATE TABLE IF NOT EXISTS notifications (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -142,7 +134,6 @@ async function seedData() {
   if (usersCount.count === 0) {
     console.log('Seeding initial data...');
     
-    // Seed Users
     const passwordHash = await bcrypt.hash('password123', 10);
     const users = [
       { username: 'alex', email: 'alex@example.com', password_hash: passwordHash, avatar_color: '#f59e0b' },
@@ -159,7 +150,6 @@ async function seedData() {
       seededUsers.push({ id: res.id, ...u });
     }
 
-    // Seed Projects
     const projects = [
       { name: 'Alpha Platform Development', description: 'Rebuilding the core web engine for visual board layout.', owner_id: seededUsers[0].id },
       { name: 'Mobile App Refactor', description: 'Upgrading core navigation modules and cache performance.', owner_id: seededUsers[1].id }
@@ -174,7 +164,6 @@ async function seedData() {
       seededProjects.push({ id: res.id, ...p });
     }
 
-    // Add Project Members
     for (const project of seededProjects) {
       for (const user of seededUsers) {
         await query.run(
@@ -184,7 +173,6 @@ async function seedData() {
       }
     }
 
-    // Seed Tasks for Project 1
     const tasks = [
       { project_id: seededProjects[0].id, title: 'Implement CSS Nesting Layout', description: 'Utilize CSS nesting features to organize our glassmorphic dashboard rules cleanly.', status: 'done', priority: 'high', due_date: '2026-06-10', assignee_id: seededUsers[0].id, position: 0 },
       { project_id: seededProjects[0].id, title: 'Add WebSockets live board updates', description: 'Establish dynamic state broadcast via WS channels when user moves tasks.', status: 'in_progress', priority: 'high', due_date: '2026-06-15', assignee_id: seededUsers[1].id, position: 0 },
@@ -201,7 +189,6 @@ async function seedData() {
       seededTasks.push({ id: res.id, ...t });
     }
 
-    // Seed Comments
     await query.run(
       'INSERT INTO comments (task_id, user_id, content) VALUES (?, ?, ?)',
       [seededTasks[1].id, seededUsers[0].id, "I'm currently working on setting up the socket heartbeat check to make sure connections auto-reconnect."]
@@ -211,7 +198,6 @@ async function seedData() {
       [seededTasks[1].id, seededUsers[2].id, 'Awesome, looking forward to testing the live sync changes!']
     );
 
-    // Seed Notifications
     await query.run(
       'INSERT INTO notifications (user_id, project_id, task_id, type, message) VALUES (?, ?, ?, ?, ?)',
       [seededUsers[1].id, seededProjects[0].id, seededTasks[1].id, 'task_assigned', 'You have been assigned to task: Add WebSockets live board updates']

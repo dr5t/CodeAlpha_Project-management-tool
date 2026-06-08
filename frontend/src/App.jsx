@@ -10,7 +10,6 @@ import { Icons } from './components/Avatar';
 
 const API_URL = window.location.port === '5173' ? 'http://localhost:5001/api' : '/api';
 
-// ─── Toast System ─────────────────────────────────────────────────────────────
 let _toastId = 0;
 
 function ToastContainer({ toasts, onDismiss }) {
@@ -42,7 +41,6 @@ function ToastContainer({ toasts, onDismiss }) {
   );
 }
 
-// ─── Generic Modal Dialog ─────────────────────────────────────────────────────
 function ModalDialog({ id, title, children, footer, onClose, size = '' }) {
   const ref = useRef(null);
   useEffect(() => { if (ref.current) ref.current.showModal(); }, []);
@@ -76,29 +74,23 @@ export default function App() {
   const [activeTaskId, setActiveTaskId] = useState(null);
   const [toasts, setToasts] = useState([]);
 
-  // Modals
   const [showNewProject, setShowNewProject]   = useState(false);
   const [showInvite, setShowInvite]           = useState(false);
   const [showEditProject, setShowEditProject] = useState(false);
   const [showDeleteProject, setShowDeleteProject] = useState(false);
 
-  // New project form
   const [newProjName, setNewProjName] = useState('');
   const [newProjDesc, setNewProjDesc] = useState('');
   const [newProjError, setNewProjError] = useState('');
 
-  // Edit project form
   const [editProjName, setEditProjName] = useState('');
   const [editProjDesc, setEditProjDesc] = useState('');
 
-  // Invite
   const [systemUsers, setSystemUsers] = useState([]);
   const [inviteUserId, setInviteUserId] = useState('');
 
-  // WebSocket
   const wsRef = useRef(null);
 
-  // ─── Toast helpers ────────────────────────────────────────────────────────
   const showToast = useCallback((message, type = 'info') => {
     const id = ++_toastId;
     setToasts(prev => [...prev, { id, message, type }]);
@@ -107,7 +99,6 @@ export default function App() {
 
   const dismissToast = (id) => setToasts(prev => prev.filter(t => t.id !== id));
 
-  // ─── Auth / Data Fetching callbacks (Memoized to prevent render loop warnings) ───
   const handleLogout = useCallback(() => {
     localStorage.removeItem('token');
     setToken(''); setUser(null);
@@ -120,30 +111,23 @@ export default function App() {
     try {
       const r = await fetch(`${API_URL}/projects`, { headers: { Authorization: `Bearer ${token}` } });
       if (r.ok) { const d = await r.json(); setProjects(d); }
-    } catch {
-      // Ignore fetch projects errors
-    }
+    } catch {}
   }, [token]);
 
   const fetchTasks = useCallback(async (pid) => {
     try {
       const r = await fetch(`${API_URL}/tasks/project/${pid}`, { headers: { Authorization: `Bearer ${token}` } });
       if (r.ok) { const d = await r.json(); setTasks(d); }
-    } catch {
-      // Ignore fetch tasks errors
-    }
+    } catch {}
   }, [token]);
 
   const fetchNotifications = useCallback(async () => {
     try {
       const r = await fetch(`${API_URL}/notifications`, { headers: { Authorization: `Bearer ${token}` } });
       if (r.ok) { const d = await r.json(); setNotifications(d); }
-    } catch {
-      // Ignore fetch notifications errors
-    }
+    } catch {}
   }, [token]);
 
-  // ─── Session restore ─────────────────────────────────────────────────────
   useEffect(() => {
     if (!token) return;
     fetch(`${API_URL}/auth/me`, { headers: { Authorization: `Bearer ${token}` } })
@@ -152,7 +136,6 @@ export default function App() {
       .catch(() => handleLogout());
   }, [token, handleLogout]);
 
-  // ─── Fetch data when logged in ───────────────────────────────────────────
   useEffect(() => {
     if (!user) return;
     Promise.resolve().then(() => {
@@ -161,7 +144,6 @@ export default function App() {
     });
   }, [user, fetchNotifications, fetchProjects]);
 
-  // ─── Fetch tasks when project changes ───────────────────────────────────
   useEffect(() => {
     if (!currentProject) {
       Promise.resolve().then(() => setTasks([]));
@@ -180,7 +162,6 @@ export default function App() {
     };
   }, [currentProject, fetchTasks, user?.id]);
 
-  // ─── WebSocket ───────────────────────────────────────────────────────────
   useEffect(() => {
     if (!user) return;
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -209,9 +190,7 @@ export default function App() {
             setNotifications(prev => [msg.notification, ...prev]);
             showToast(msg.notification.message, 'info');
           }
-        } catch {
-          // Ignore WS JSON parse errors
-        }
+        } catch {}
       };
       socket.onclose = () => setTimeout(connect, 5000);
     };
@@ -219,9 +198,6 @@ export default function App() {
     return () => socket?.close();
   }, [user, currentProject, fetchProjects, fetchTasks, showToast]);
 
-
-
-  // ─── Auth ────────────────────────────────────────────────────────────────
   const handleAuthSuccess = (userData, userToken) => {
     localStorage.setItem('token', userToken);
     setToken(userToken);
@@ -236,25 +212,19 @@ export default function App() {
     showToast('Profile updated!', 'success');
   };
 
-  // ─── Notifications ───────────────────────────────────────────────────────
   const handleMarkNotificationRead = async (id) => {
     try {
       await fetch(`${API_URL}/notifications/${id}/read`, { method: 'PUT', headers: { Authorization: `Bearer ${token}` } });
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: 1 } : n));
-    } catch {
-      // Ignore mark notification read errors
-    }
+    } catch {}
   };
   const handleMarkAllNotificationsRead = async () => {
     try {
       await fetch(`${API_URL}/notifications/read-all`, { method: 'PUT', headers: { Authorization: `Bearer ${token}` } });
       setNotifications(prev => prev.map(n => ({ ...n, is_read: 1 })));
-    } catch {
-      // Ignore mark all notifications read errors
-    }
+    } catch {}
   };
 
-  // ─── Navigate to project + optional task ────────────────────────────────
   const handleSelectProjectAndTask = async (projId, taskId) => {
     let proj = projects.find(p => p.id === projId);
     if (!proj) {
@@ -268,7 +238,6 @@ export default function App() {
     }
   };
 
-  // ─── Tasks ───────────────────────────────────────────────────────────────
   const handleMoveTask = async (taskId, targetStatus) => {
     const prev = [...tasks];
     setTasks(p => p.map(t => t.id === taskId ? { ...t, status: targetStatus } : t));
@@ -329,7 +298,6 @@ export default function App() {
     }
   };
 
-  // ─── Projects ────────────────────────────────────────────────────────────
   const handleCreateProject = async (e) => {
     e.preventDefault();
     if (!newProjName.trim()) { setNewProjError('Project name is required.'); return; }
@@ -389,7 +357,6 @@ export default function App() {
     }
   };
 
-  // ─── Invite member ───────────────────────────────────────────────────────
   const handleOpenInvite = async () => {
     try {
       const r = await fetch(`${API_URL}/auth/users`, { headers: { Authorization: `Bearer ${token}` } });
@@ -400,9 +367,7 @@ export default function App() {
       setSystemUsers(eligible);
       setInviteUserId(eligible[0]?.id || '');
       setShowInvite(true);
-    } catch {
-      // Ignore invite member load errors
-    }
+    } catch {}
   };
 
   const handleInviteSubmit = async (e) => {
@@ -429,12 +394,10 @@ export default function App() {
     }
   };
 
-  // ─── Not logged in ───────────────────────────────────────────────────────
   if (!token || !user) {
     return <Auth onAuthSuccess={handleAuthSuccess} API_URL={API_URL} />;
   }
 
-  // ─── Render ──────────────────────────────────────────────────────────────
   return (
     <div className="app-root">
       <Sidebar
@@ -580,7 +543,6 @@ export default function App() {
         </div>
       </div>
 
-      {/* ── TASK DETAIL MODAL ── */}
       {activeTaskId && (
         <TaskModal
           key={activeTaskId}
@@ -593,7 +555,6 @@ export default function App() {
         />
       )}
 
-      {/* ── NEW PROJECT MODAL ── */}
       {showNewProject && (
         <ModalDialog
           id="new-project-dialog"
@@ -611,7 +572,7 @@ export default function App() {
             <div className="form-field">
               <label className="form-label" htmlFor="new-proj-name">Project Name <span style={{ color: 'var(--red)' }}>*</span></label>
               <input
-                id="new-proj-name" className="form-input"
+                 id="new-proj-name" className="form-input"
                 placeholder="e.g. Website Redesign"
                 value={newProjName}
                 onChange={e => { setNewProjError(''); setNewProjName(e.target.value); }}
@@ -632,7 +593,6 @@ export default function App() {
         </ModalDialog>
       )}
 
-      {/* ── EDIT PROJECT MODAL ── */}
       {showEditProject && (
         <ModalDialog
           id="edit-project-dialog"
@@ -668,7 +628,6 @@ export default function App() {
         </ModalDialog>
       )}
 
-      {/* ── DELETE PROJECT CONFIRM ── */}
       {showDeleteProject && (
         <ModalDialog
           id="delete-project-dialog"
@@ -694,7 +653,6 @@ export default function App() {
         </ModalDialog>
       )}
 
-      {/* ── INVITE MEMBER MODAL ── */}
       {showInvite && (
         <ModalDialog
           id="invite-member-dialog"
@@ -736,7 +694,6 @@ export default function App() {
         </ModalDialog>
       )}
 
-      {/* ── TOASTS ── */}
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </div>
   );

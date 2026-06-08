@@ -1,9 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
-
-/**
- * Universal Avatar component.
- * Shows profile picture (if avatar_url set) or colored initials fallback.
- */
 export function Avatar({ user, size = 'md', onClick, className = '', style = {} }) {
   const sizeMap = { xs: 22, sm: 28, md: 36, lg: 48, xl: 72, '2xl': 96 };
   const fontMap = { xs: 9, sm: 11, md: 14, lg: 18, xl: 28, '2xl': 38 };
@@ -39,7 +33,6 @@ export function Avatar({ user, size = 'md', onClick, className = '', style = {} 
           alt={user?.username || 'Avatar'}
           style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
           onError={(e) => {
-            // Fallback to initials if image fails
             e.target.style.display = 'none';
             e.target.parentNode.style.background = bgColor;
           }}
@@ -60,9 +53,6 @@ export function Avatar({ user, size = 'md', onClick, className = '', style = {} 
   );
 }
 
-/**
- * Avatar with an edit overlay for profile screens.
- */
 export function AvatarEditable({ user, size = 'xl', onEditClick }) {
   return (
     <div style={{ position: 'relative', display: 'inline-block' }}>
@@ -97,7 +87,6 @@ export function AvatarEditable({ user, size = 'xl', onEditClick }) {
   );
 }
 
-// ── Icon library (SVG icons to replace all emojis) ────────────────────────────
 export const Icons = {
   Dashboard: ({ s = 18 }) => (
     <svg width={s} height={s} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">

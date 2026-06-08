@@ -4,7 +4,6 @@ const { query } = require('../db');
 const { authenticateToken } = require('./auth');
 const { broadcastToProject, sendNotificationToUser } = require('../socketHandler');
 
-// GET /api/comments/task/:taskId
 router.get('/task/:taskId', authenticateToken, async (req, res) => {
   const taskId = req.params.taskId;
   try {
@@ -22,7 +21,6 @@ router.get('/task/:taskId', authenticateToken, async (req, res) => {
   }
 });
 
-// POST /api/comments/task/:taskId
 router.post('/task/:taskId', authenticateToken, async (req, res) => {
   const taskId = req.params.taskId;
   const { content } = req.body;
@@ -46,7 +44,6 @@ router.post('/task/:taskId', authenticateToken, async (req, res) => {
       WHERE c.id = ?
     `, [result.id]);
 
-    // Notify assignee if different from commenter
     if (task.assignee_id && Number(task.assignee_id) !== Number(req.user.id)) {
       const msg = `${req.user.username} commented on "${task.title}"`;
       const notifyRes = await query.run(
@@ -68,7 +65,6 @@ router.post('/task/:taskId', authenticateToken, async (req, res) => {
   }
 });
 
-// DELETE /api/comments/:commentId
 router.delete('/:commentId', authenticateToken, async (req, res) => {
   const { commentId } = req.params;
   try {
@@ -82,7 +78,6 @@ router.delete('/:commentId', authenticateToken, async (req, res) => {
   }
 });
 
-// Legacy: GET /api/comments/:taskId
 router.get('/:taskId', authenticateToken, async (req, res) => {
   const taskId = req.params.taskId;
   try {
@@ -97,7 +92,6 @@ router.get('/:taskId', authenticateToken, async (req, res) => {
   }
 });
 
-// Legacy: POST /api/comments/:taskId
 router.post('/:taskId', authenticateToken, async (req, res) => {
   const taskId = req.params.taskId;
   const { content } = req.body;

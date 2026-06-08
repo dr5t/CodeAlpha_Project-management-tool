@@ -3,7 +3,6 @@ const router = express.Router();
 const { query } = require('../db');
 const { authenticateToken } = require('./auth');
 
-// GET /notifications - Fetch user's notifications
 router.get('/', authenticateToken, async (req, res) => {
   try {
     const notifications = await query.all(
@@ -17,7 +16,6 @@ router.get('/', authenticateToken, async (req, res) => {
   }
 });
 
-// PUT /notifications/:id/read - Mark one notification as read
 router.put('/:id/read', authenticateToken, async (req, res) => {
   const notificationId = req.params.id;
   try {
@@ -32,7 +30,6 @@ router.put('/:id/read', authenticateToken, async (req, res) => {
   }
 });
 
-// PUT /notifications/read-all - Mark all user notifications as read
 router.put('/read-all', authenticateToken, async (req, res) => {
   try {
     await query.run(

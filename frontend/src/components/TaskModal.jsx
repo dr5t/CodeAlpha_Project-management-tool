@@ -20,8 +20,6 @@ function timeAgo(dateStr) {
   return `${Math.floor(h / 24)}d ago`;
 }
 
-// Local Avatar component removed in favor of imported component
-
 export default function TaskModal({ taskId, onClose, API_URL, token, projectMembers, onTaskUpdated }) {
   const dialogRef = useRef(null);
   const [task, setTask] = useState(null);
@@ -34,7 +32,6 @@ export default function TaskModal({ taskId, onClose, API_URL, token, projectMemb
   const [error, setError] = useState('');
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  // Editable fields
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [status, setStatus] = useState('todo');
@@ -42,7 +39,6 @@ export default function TaskModal({ taskId, onClose, API_URL, token, projectMemb
   const [dueDate, setDueDate] = useState('');
   const [assigneeId, setAssigneeId] = useState('');
 
-  // Track dirty state
   const dirty = task && (
     title !== (task.title || '') ||
     description !== (task.description || '') ||
@@ -52,12 +48,10 @@ export default function TaskModal({ taskId, onClose, API_URL, token, projectMemb
     String(assigneeId) !== String(task.assignee_id || '')
   );
 
-  // Open dialog on mount
   useEffect(() => {
     if (dialogRef.current) dialogRef.current.showModal();
   }, []);
 
-  // Fetch task details
   useEffect(() => {
     if (!taskId) return;
     const fetchTask = async () => {
@@ -87,20 +81,16 @@ export default function TaskModal({ taskId, onClose, API_URL, token, projectMemb
     fetchTask();
   }, [taskId, API_URL, token]);
 
-  // Listen for live WebSocket updates to refresh comments
   useEffect(() => {
     const handler = (e) => {
       try {
         const msg = JSON.parse(e.data);
         if (msg.type === 'BOARD_UPDATED') {
-          // Re-fetch comments silently
           fetch(`${API_URL}/comments/task/${taskId}`, { headers: { Authorization: `Bearer ${token}` } })
             .then(r => r.ok ? r.json() : null)
             .then(d => { if (d) setComments(d); });
         }
-      } catch {
-        // Ignore WS message parsing errors
-      }
+      } catch {}
     };
     window.addEventListener('websocket-message', handler);
     return () => window.removeEventListener('websocket-message', handler);
@@ -176,9 +166,7 @@ export default function TaskModal({ taskId, onClose, API_URL, token, projectMemb
         headers: { Authorization: `Bearer ${token}` }
       });
       setComments(prev => prev.filter(c => c.id !== commentId));
-    } catch {
-      // Ignore comment deletion errors
-    }
+    } catch {}
   };
 
   const handleClose = () => {
@@ -203,7 +191,6 @@ export default function TaskModal({ taskId, onClose, API_URL, token, projectMemb
       style={{ maxWidth: '900px', width: '90vw' }}
     >
       <div className="modal-box two-col" style={{ maxHeight: '90vh' }}>
-        {/* ── LEFT COLUMN ── */}
         <div className="modal-col-main">
           {loading ? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
@@ -211,7 +198,6 @@ export default function TaskModal({ taskId, onClose, API_URL, token, projectMemb
             </div>
           ) : (
             <>
-              {/* Header */}
               <div className="modal-header">
                 <input
                   id="task-title-input"
@@ -236,9 +222,7 @@ export default function TaskModal({ taskId, onClose, API_URL, token, projectMemb
                 </div>
               )}
 
-              {/* Scrollable body */}
               <div className="modal-body-scroll">
-                {/* Description */}
                 <div className="detail-group">
                   <label className="detail-label" htmlFor="task-desc">Description</label>
                   <textarea
@@ -251,7 +235,6 @@ export default function TaskModal({ taskId, onClose, API_URL, token, projectMemb
                   />
                 </div>
 
-                {/* Save action bar */}
                 {dirty && (
                   <div style={{
                     display: 'flex', gap: 8, alignItems: 'center',
@@ -286,7 +269,6 @@ export default function TaskModal({ taskId, onClose, API_URL, token, projectMemb
                   </div>
                 )}
 
-                {/* Comments */}
                 <div className="comments-area">
                   <div className="comments-heading">
                     <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -369,7 +351,6 @@ export default function TaskModal({ taskId, onClose, API_URL, token, projectMemb
           )}
         </div>
 
-        {/* ── RIGHT SIDEBAR ── */}
         <div className="modal-col-side">
           {!loading && (
             <>
@@ -463,7 +444,6 @@ export default function TaskModal({ taskId, onClose, API_URL, token, projectMemb
                 )}
               </div>
 
-              {/* Task metadata */}
               {task && (
                 <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16 }}>
                   <div className="detail-label" style={{ marginBottom: 10 }}>Created</div>
@@ -473,7 +453,6 @@ export default function TaskModal({ taskId, onClose, API_URL, token, projectMemb
                 </div>
               )}
 
-              {/* Delete task */}
               <div style={{ marginTop: 'auto', paddingTop: 12, borderTop: '1px solid var(--border)' }}>
                 {!deleteConfirmOpen ? (
                   <button

@@ -202,7 +202,6 @@ export default function ProjectBoard({ tasks, onMoveTask, onAddTask, onSelectTas
 
   return (
     <div className="board-view">
-      {/* Board header */}
       <div className="board-header">
         <div style={{ flex: 1 }}>
           <h2 style={{ fontSize: '1.1rem', fontWeight: 700, letterSpacing: '-0.01em' }}>
@@ -214,7 +213,6 @@ export default function ProjectBoard({ tasks, onMoveTask, onAddTask, onSelectTas
             </p>
           )}
         </div>
-        {/* Project management buttons for owner */}
         {user && currentProject && currentProject.owner_id === user.id && (
           <div style={{ display: 'flex', gap: 8 }}>
             <button id="btn-edit-project" className="btn btn-secondary btn-sm" onClick={onEditProject}>
@@ -233,7 +231,6 @@ export default function ProjectBoard({ tasks, onMoveTask, onAddTask, onSelectTas
         )}
       </div>
 
-      {/* Columns */}
       <div className="board-columns">
         {COLUMNS.map((col, ci) => {
           const colTasks = tasks.filter(t => t.status === col.id);

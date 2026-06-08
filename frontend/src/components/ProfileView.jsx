@@ -1,8 +1,6 @@
 import { useState, useRef } from 'react';
 import { Avatar, AvatarEditable, Icons, AVATAR_COLORS } from './Avatar';
 
-// const BACKEND = 'http://localhost:5001';
-
 export default function ProfileView({ user, API_URL, token, onProfileUpdated, onLogout }) {
   const [tab, setTab] = useState('profile');
   const [editMode, setEditMode] = useState(false);
@@ -16,13 +14,11 @@ export default function ProfileView({ user, API_URL, token, onProfileUpdated, on
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const fileInputRef = useRef(null);
 
-  // Password form
   const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '', confirm: '' });
   const [pwLoading, setPwLoading] = useState(false);
   const [pwError, setPwError] = useState('');
   const [pwSuccess, setPwSuccess] = useState('');
 
-  // Delete confirm
   const [deleteConfirm, setDeleteConfirm] = useState('');
 
   const handleFormChange = (e) => {
@@ -30,7 +26,6 @@ export default function ProfileView({ user, API_URL, token, onProfileUpdated, on
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  // ── Avatar file picker ─────────────────────────────────────────────────────
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -143,7 +138,6 @@ export default function ProfileView({ user, API_URL, token, onProfileUpdated, on
     }
   };
 
-  // Compose the "current" user for avatar display (merging any preview)
   const displayUser = avatarPreview
     ? { ...user, avatar_url: avatarPreview, avatar_color: selectedColor }
     : { ...user, avatar_color: selectedColor };
@@ -157,7 +151,6 @@ export default function ProfileView({ user, API_URL, token, onProfileUpdated, on
         </div>
       </div>
 
-      {/* Tabs */}
       <div style={{ display: 'flex', gap: 4, marginBottom: 24, background: 'rgba(0,0,0,0.2)', padding: 4, borderRadius: 'var(--radius-sm)', width: 'fit-content' }}>
         {[
           { id: 'profile', icon: <Icons.Profile s={14}/>, label: 'Profile' },
@@ -178,11 +171,9 @@ export default function ProfileView({ user, API_URL, token, onProfileUpdated, on
       <div className="profile-panel">
         {tab === 'profile' && (
           <>
-            {/* ── Hero card ── */}
             <div className="profile-hero">
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
                 <AvatarEditable user={displayUser} size="xl" onEditClick={() => fileInputRef.current?.click()} />
-                {/* Hidden file input */}
                 <input
                   ref={fileInputRef}
                   id="avatar-file-input"
@@ -275,7 +266,6 @@ export default function ProfileView({ user, API_URL, token, onProfileUpdated, on
               </div>
             </div>
 
-            {/* ── Status messages ── */}
             {error && (
               <div className="error-banner">
                 <Icons.Alert s={14} /> {error}
@@ -287,7 +277,6 @@ export default function ProfileView({ user, API_URL, token, onProfileUpdated, on
               </div>
             )}
 
-            {/* ── Edit form ── */}
             {editMode && (
               <div className="profile-section">
                 <div className="profile-section-header">
@@ -331,7 +320,6 @@ export default function ProfileView({ user, API_URL, token, onProfileUpdated, on
               </div>
             )}
 
-            {/* ── Info display ── */}
             {!editMode && (
               <div className="profile-section">
                 <div className="profile-section-header">
@@ -361,7 +349,6 @@ export default function ProfileView({ user, API_URL, token, onProfileUpdated, on
 
         {tab === 'security' && (
           <>
-            {/* ── Password change ── */}
             <div className="profile-section">
               <div className="profile-section-header">
                 <h4 style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icons.Key s={15}/> Change Password</h4>
@@ -409,7 +396,6 @@ export default function ProfileView({ user, API_URL, token, onProfileUpdated, on
               </div>
             </div>
 
-            {/* ── Danger zone ── */}
             <div className="profile-section" style={{ borderColor: 'rgba(248,113,113,0.25)' }}>
               <div className="profile-section-header" style={{ borderColor: 'rgba(248,113,113,0.15)' }}>
                 <h4 style={{ color: 'var(--red)', display: 'flex', alignItems: 'center', gap: 8 }}>

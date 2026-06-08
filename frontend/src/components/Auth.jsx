@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import AgileSpaceLogo from './AgileSpaceLogo';
 import LoginCharacter from './LoginCharacter';
 
-// Custom Eye icon helper
 const EyeIcon = ({ show }) => {
   if (show) {
     return (
@@ -82,15 +81,12 @@ export default function Auth({ onAuthSuccess, API_URL }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Dynamic aesthetic theme
   const [selectedFont] = useState(() => HEADLINE_FONTS[Math.floor(Math.random() * HEADLINE_FONTS.length)]);
   const [selectedGradient] = useState(() => GRADIENT_PALETTES[Math.floor(Math.random() * GRADIENT_PALETTES.length)]);
-
 
   const [loginData, setLoginData] = useState({ email: '', password: '' });
   const [regData, setRegData] = useState({ username: '', email: '', password: '', confirm: '' });
 
-  // Mascot & Visibility States
   const [activeField, setActiveField] = useState('none');
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showRegPassword, setShowRegPassword] = useState(false);
@@ -177,7 +173,6 @@ export default function Auth({ onAuthSuccess, API_URL }) {
     <div className="auth-page">
       <div className="auth-card split">
         
-        {/* LEFT COLUMN: Brand Logo and Animated Character */}
         <div className="auth-card-left">
           <div className="auth-logo-wrap" style={{ marginBottom: 12 }}>
             <AgileSpaceLogo size={42} className="auth-logo-anim" />
@@ -195,13 +190,10 @@ export default function Auth({ onAuthSuccess, API_URL }) {
             </div>
           </div>
           
-          {/* Animated human character */}
           <LoginCharacter state={getMascotState()} />
         </div>
 
-        {/* RIGHT COLUMN: Sign In / Create Account Form */}
         <div className="auth-card-right">
-          {/* Tab Switches */}
           <div className="auth-tabs">
             <button className={`auth-tab${tab === 'login' ? ' active' : ''}`} onClick={() => switchTab('login')} id="tab-login">
               Sign In
