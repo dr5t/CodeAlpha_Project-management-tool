@@ -1,5 +1,3 @@
-import React from 'react';
-
 export const Icons = {
   Dashboard: ({ s = 18 }) => (
     <svg width={s} height={s} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
