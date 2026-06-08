@@ -1,6 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:ital,opsz,wght@0,14..32,300..700;1,14..32,300..700&display=swap');
 
-/* ==================== DESIGN TOKENS ==================== */
 :root {
   --bg-base: #070810;
   --bg-surface: #0d0f1c;
@@ -57,7 +56,6 @@
   --dur-slow: 350ms;
 }
 
-/* ==================== LIGHT MODE THEME ==================== */
 :root.light-mode {
   --bg-base: #f8fafc;
   --bg-surface: #ffffff;
@@ -96,7 +94,6 @@
   background: var(--primary);
 }
 
-/* ==================== COMPACT BOARD STYLING ==================== */
 .compact-board-container .kanban-col {
   width: 240px;
   min-width: 240px;
@@ -120,7 +117,6 @@
   padding: 6px;
 }
 
-/* ==================== RESET ==================== */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html { scroll-behavior: smooth; }
@@ -140,13 +136,11 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 a { color: var(--primary-light); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
-/* ==================== SCROLLBARS ==================== */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 99px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
 
-/* ==================== KEYFRAME ANIMATIONS ==================== */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
@@ -187,13 +181,11 @@ a:hover { text-decoration: underline; }
   40% { transform: scale(1); }
 }
 
-/* ==================== UTILITY ==================== */
 .animate-fade { animation: fadeIn var(--dur-slow) var(--ease) both; }
 .animate-scale { animation: fadeInScale var(--dur-slow) var(--ease-spring) both; }
 .animate-slide-right { animation: slideInRight var(--dur) var(--ease) both; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
 
-/* ==================== AUTH PAGE ==================== */
 .auth-page {
   min-height: 100vh;
   display: grid;
@@ -405,7 +397,6 @@ a:hover { text-decoration: underline; }
   animation: fadeIn 0.2s var(--ease) both;
 }
 
-/* ==================== APP LAYOUT ==================== */
 .app-root {
   display: flex;
   height: 100vh;
@@ -414,7 +405,6 @@ a:hover { text-decoration: underline; }
   background: var(--bg-base);
 }
 
-/* ==================== SIDEBAR ==================== */
 .sidebar {
   width: var(--sidebar-w);
   flex-shrink: 0;
@@ -546,7 +536,6 @@ a:hover { text-decoration: underline; }
 .sidebar-collapse-btn { transition: transform var(--dur) var(--ease); }
 .sidebar.collapsed .sidebar-collapse-btn { transform: rotate(180deg); }
 
-/* ==================== AVATAR ==================== */
 .avatar {
   border-radius: 50%;
   display: flex;
@@ -568,7 +557,6 @@ a:hover { text-decoration: underline; }
 .avatar-stack .avatar { border: 2px solid var(--bg-card); margin-left: -8px; }
 .avatar-stack .avatar:first-child { margin-left: 0; }
 
-/* Color picker swatches */
 .color-swatches { display: flex; flex-wrap: wrap; gap: 8px; }
 .color-swatch {
   width: 28px; height: 28px;
@@ -580,7 +568,6 @@ a:hover { text-decoration: underline; }
 .color-swatch:hover { transform: scale(1.2); }
 .color-swatch.selected { border-color: white; transform: scale(1.15); box-shadow: 0 0 0 2px rgba(255,255,255,0.3); }
 
-/* ==================== HEADER ==================== */
 .app-header {
   height: var(--header-h);
   border-bottom: 1px solid var(--border);
@@ -609,7 +596,6 @@ a:hover { text-decoration: underline; }
 .breadcrumb-sep { color: var(--text-3); flex-shrink: 0; }
 .header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 
-/* ==================== NOTIFICATION BELL ==================== */
 .notif-btn { position: relative; }
 .notif-dot {
   position: absolute;
@@ -636,7 +622,6 @@ a:hover { text-decoration: underline; }
   border: 2px solid var(--bg-surface);
 }
 
-/* ==================== DROPDOWN PANEL ==================== */
 .dropdown-panel {
   position: absolute;
   top: calc(100% + 8px);
@@ -688,7 +673,6 @@ a:hover { text-decoration: underline; }
 .notif-time { font-size: 0.72rem; color: var(--text-2); margin-top: 3px; }
 .notif-empty { padding: 40px 20px; text-align: center; color: var(--text-2); font-size: 0.85rem; }
 
-/* ==================== MAIN CONTENT AREA ==================== */
 .main-area {
   flex: 1;
   display: flex;
@@ -701,12 +685,10 @@ a:hover { text-decoration: underline; }
   padding: 24px;
 }
 
-/* ==================== PAGE HEADER ==================== */
 .page-header { margin-bottom: 24px; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
 .page-title { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 4px; }
 .page-subtitle { font-size: 0.875rem; color: var(--text-2); }
 
-/* ==================== STAT CARDS ==================== */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -736,7 +718,6 @@ a:hover { text-decoration: underline; }
 .stat-body h4 { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-2); margin-bottom: 4px; }
 .stat-body .stat-value { font-size: 1.8rem; font-weight: 700; letter-spacing: -0.03em; }
 
-/* ==================== DASHBOARD ==================== */
 .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
 @media (max-width: 1100px) { .dashboard-grid { grid-template-columns: 1fr; } }
 
@@ -756,7 +737,6 @@ a:hover { text-decoration: underline; }
 .section-card-header h3 { font-size: 0.95rem; font-weight: 600; }
 .section-card-body { padding: 16px 20px; }
 
-/* ==================== PROJECT CARDS (Dashboard) ==================== */
 .project-cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap: 16px; padding: 16px 20px; }
 .project-tile {
   background: var(--bg-elevated);
@@ -798,7 +778,6 @@ a:hover { text-decoration: underline; }
 .progress-label { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-2); margin-bottom: 6px; }
 .project-tile-footer { display: flex; align-items: center; justify-content: space-between; }
 
-/* ==================== ACTIVITY FEED ==================== */
 .activity-list { display: flex; flex-direction: column; gap: 14px; }
 .activity-item { display: flex; gap: 10px; align-items: flex-start; animation: fadeIn 0.3s var(--ease) both; }
 .activity-dot {
@@ -812,7 +791,6 @@ a:hover { text-decoration: underline; }
 .activity-text { font-size: 0.82rem; line-height: 1.45; }
 .activity-time { font-size: 0.72rem; color: var(--text-2); margin-top: 2px; }
 
-/* ==================== KANBAN BOARD ==================== */
 .board-view {
   display: flex;
   flex-direction: column;
@@ -906,7 +884,6 @@ a:hover { text-decoration: underline; }
 }
 .col-add-btn:hover { background: rgba(255,255,255,0.03); border-color: var(--border-hover); color: var(--text-1); }
 
-/* ==================== TASK CARD ==================== */
 .task-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -957,7 +934,6 @@ a:hover { text-decoration: underline; }
 }
 .task-chip.overdue { color: var(--red); background: var(--red-bg); border-color: rgba(248,113,113,0.2); }
 
-/* Priority badge */
 .priority-badge {
   display: inline-flex; align-items: center; gap: 4px;
   font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
@@ -968,7 +944,6 @@ a:hover { text-decoration: underline; }
 .priority-badge.medium { background: var(--amber-bg); color: var(--amber); }
 .priority-badge.high { background: var(--red-bg); color: var(--red); }
 
-/* Status badge */
 .status-badge {
   display: inline-flex; align-items: center; gap: 5px;
   font-size: 0.78rem; font-weight: 500;
@@ -980,7 +955,6 @@ a:hover { text-decoration: underline; }
 .status-badge.review { background: var(--purple-bg); color: var(--purple); }
 .status-badge.done { background: var(--green-bg); color: var(--green); }
 
-/* Inline quick-add in column */
 .quick-add-form {
   background: var(--bg-elevated);
   border: 1px solid var(--primary);
@@ -993,7 +967,6 @@ a:hover { text-decoration: underline; }
 }
 .quick-add-actions { display: flex; gap: 6px; justify-content: flex-end; }
 
-/* ==================== TASK DETAIL MODAL ==================== */
 dialog {
   margin: auto;
   background: transparent;
@@ -1090,7 +1063,6 @@ dialog[open]::backdrop {
 }
 .detail-select:focus { border-color: var(--primary); }
 
-/* ==================== COMMENTS ==================== */
 .comments-area { border-top: 1px solid var(--border); padding-top: 20px; flex-shrink: 0; }
 .comments-heading { font-size: 0.85rem; font-weight: 600; margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
 .comment-compose { display: flex; gap: 10px; margin-bottom: 18px; }
@@ -1130,7 +1102,6 @@ dialog[open]::backdrop {
 .comment-time { font-size: 0.7rem; color: var(--text-2); }
 .comment-body { font-size: 0.83rem; line-height: 1.45; white-space: pre-wrap; }
 
-/* ==================== MODALS (generic) ==================== */
 .modal-sm { max-width: 460px; }
 .modal-header-simple {
   padding: 22px 24px 20px;
@@ -1141,7 +1112,6 @@ dialog[open]::backdrop {
 .modal-body-simple { padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; }
 .modal-footer { padding: 14px 24px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; }
 
-/* ==================== PROFILE PANEL ==================== */
 .profile-panel { display: flex; flex-direction: column; gap: 24px; max-width: 560px; animation: fadeIn 0.3s var(--ease) both; }
 .profile-hero {
   background: var(--bg-card);
@@ -1185,7 +1155,6 @@ dialog[open]::backdrop {
 .profile-section-header h4 { font-size: 0.9rem; font-weight: 600; }
 .profile-section-body { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
 
-/* ==================== SETTINGS PANEL ==================== */
 .settings-row {
   display: flex;
   align-items: center;
@@ -1197,7 +1166,6 @@ dialog[open]::backdrop {
 .settings-row-label { font-size: 0.875rem; font-weight: 500; margin-bottom: 2px; }
 .settings-row-sub { font-size: 0.78rem; color: var(--text-2); }
 
-/* Toggle */
 .toggle-wrap { display: flex; align-items: center; gap: 10px; cursor: pointer; }
 .toggle {
   width: 42px; height: 24px;
@@ -1219,7 +1187,6 @@ dialog[open]::backdrop {
 .toggle.on { background: var(--primary); }
 .toggle.on::after { transform: translateX(18px); }
 
-/* ==================== MEMBER LIST ==================== */
 .member-row {
   display: flex;
   align-items: center;
@@ -1242,7 +1209,6 @@ dialog[open]::backdrop {
   letter-spacing: 0.05em;
 }
 
-/* ==================== LOADING STATES ==================== */
 .skeleton {
   background: linear-gradient(90deg, var(--bg-elevated) 25%, rgba(255,255,255,0.04) 50%, var(--bg-elevated) 75%);
   background-size: 200% 100%;
@@ -1258,7 +1224,6 @@ dialog[open]::backdrop {
   flex-shrink: 0;
 }
 
-/* ==================== TOASTS ==================== */
 .toast-container {
   position: fixed;
   bottom: 20px;
@@ -1291,7 +1256,6 @@ dialog[open]::backdrop {
 .toast-close { background: none; border: none; color: var(--text-2); cursor: pointer; padding: 2px; font-size: 1rem; opacity: 0.6; }
 .toast-close:hover { opacity: 1; }
 
-/* ==================== CONTEXT MENU ==================== */
 .ctx-menu {
   position: fixed;
   background: var(--bg-elevated);
@@ -1320,7 +1284,6 @@ dialog[open]::backdrop {
 .ctx-item.danger:hover { background: var(--red-bg); }
 .ctx-sep { height: 1px; background: var(--border); margin: 4px 0; }
 
-/* ==================== EMPTY STATES ==================== */
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -1335,7 +1298,6 @@ dialog[open]::backdrop {
 .empty-title { font-size: 1rem; font-weight: 600; color: var(--text-1); }
 .empty-desc { font-size: 0.85rem; max-width: 280px; line-height: 1.5; }
 
-/* ==================== RESPONSIVE ==================== */
 @media (max-width: 768px) {
   .app-root { flex-direction: column; }
   .sidebar { width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
@@ -1348,7 +1310,6 @@ dialog[open]::backdrop {
   .content-view { padding: 14px; }
 }
 
-/* ==================== PASSWORD INPUT TOGGLE ==================== */
 .password-input-wrapper {
   position: relative;
   display: flex;
@@ -1377,7 +1338,6 @@ dialog[open]::backdrop {
   padding-right: 42px !important;
 }
 
-/* ==================== SPLIT AUTH CARD ==================== */
 .auth-card.split {
   max-width: 800px;
   padding: 0;
@@ -1420,7 +1380,6 @@ dialog[open]::backdrop {
   }
 }
 
-/* ==================== AUTH HEADER ANIMATION ==================== */
 .auth-logo-anim {
   animation: auth-slide-fade 0.8s var(--ease-spring) both;
 }
@@ -1444,19 +1403,17 @@ dialog[open]::backdrop {
   }
 }
 
-/* ==================== TYPEWRITER EFFECT ==================== */
 @keyframes typewriter-blink {
   50% { opacity: 0; }
 }
 .typewriter-cursor {
   animation: typewriter-blink 0.6s step-end infinite;
-  color: #ec4899; /* Pink cursor matches brand color */
+  color: #ec4899; 
   margin-left: 2px;
   font-weight: 500;
-  -webkit-text-fill-color: #ec4899 !important; /* Override gradient transparency for the cursor */
+  -webkit-text-fill-color: #ec4899 !important; 
 }
 
-/* ==================== SHIFTING GRADIENT ANIMATION ==================== */
 .animate-gradient-motion {
   background-size: 200% auto !important;
   animation: auth-gradient-shift 5s ease infinite !important;
