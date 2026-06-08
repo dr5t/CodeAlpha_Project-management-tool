@@ -25,9 +25,9 @@ export function Avatar({ user, size = 'md', onClick, className = '', style = {} 
   const handleClick = (e) => { if (onClick) onClick(e); };
 
   if (user?.avatar_url) {
-    const src = user.avatar_url.startsWith('http')
+    const src = (user.avatar_url.startsWith('http') || user.avatar_url.startsWith('blob:') || user.avatar_url.startsWith('data:'))
       ? user.avatar_url
-      : `http://localhost:5001${user.avatar_url}`;
+      : `${window.location.port === '5173' ? 'http://localhost:5001' : ''}${user.avatar_url}`;
     return (
       <div style={baseStyle} className={className} onClick={handleClick} title={user?.username}>
         <img
