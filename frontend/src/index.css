@@ -57,6 +57,69 @@
   --dur-slow: 350ms;
 }
 
+/* ==================== LIGHT MODE THEME ==================== */
+:root.light-mode {
+  --bg-base: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-card: #f1f5f9;
+  --bg-card-hover: #e2e8f0;
+  --bg-elevated: #cbd5e1;
+
+  --border: rgba(0,0,0,0.08);
+  --border-active: rgba(79,70,229,0.5);
+  --border-hover: rgba(0,0,0,0.16);
+
+  --primary: #4f46e5;
+  --primary-dark: #3730a3;
+  --primary-light: #6366f1;
+  --primary-glow: rgba(79,70,229,0.18);
+  --primary-subtle: rgba(79,70,229,0.08);
+
+  --accent: #7c3aed;
+  --accent-glow: rgba(124,58,237,0.15);
+
+  --text-1: #0f172a;
+  --text-2: #475569;
+  --text-3: #94a3b8;
+  --text-disabled: #cbd5e1;
+
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.06);
+  --shadow: 0 8px 32px rgba(0,0,0,0.08);
+  --shadow-lg: 0 20px 60px rgba(0,0,0,0.12);
+  --shadow-glow: 0 0 30px rgba(79,70,229,0.08);
+}
+
+.light-mode .toggle {
+  background: rgba(0,0,0,0.1);
+}
+.light-mode .toggle.on {
+  background: var(--primary);
+}
+
+/* ==================== COMPACT BOARD STYLING ==================== */
+.compact-board-container .kanban-col {
+  width: 240px;
+  min-width: 240px;
+}
+.compact-board-container .col-header {
+  padding: 8px 12px;
+}
+.compact-board-container .col-cards {
+  padding: 8px;
+  gap: 8px;
+}
+.compact-board-container .task-card {
+  padding: 8px 10px;
+}
+.compact-board-container .task-card-desc {
+  margin-bottom: 8px;
+  font-size: 0.75rem;
+}
+.compact-board-container .col-add-btn {
+  margin: 6px 8px 8px;
+  padding: 6px;
+}
+
 /* ==================== RESET ==================== */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
