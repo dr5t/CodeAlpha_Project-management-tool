@@ -111,21 +111,27 @@ export default function App() {
     try {
       const r = await fetch(`${API_URL}/projects`, { headers: { Authorization: `Bearer ${token}` } });
       if (r.ok) { const d = await r.json(); setProjects(d); }
-    } catch {}
+    } catch {
+      void 0;
+    }
   }, [token]);
 
   const fetchTasks = useCallback(async (pid) => {
     try {
       const r = await fetch(`${API_URL}/tasks/project/${pid}`, { headers: { Authorization: `Bearer ${token}` } });
       if (r.ok) { const d = await r.json(); setTasks(d); }
-    } catch {}
+    } catch {
+      void 0;
+    }
   }, [token]);
 
   const fetchNotifications = useCallback(async () => {
     try {
       const r = await fetch(`${API_URL}/notifications`, { headers: { Authorization: `Bearer ${token}` } });
       if (r.ok) { const d = await r.json(); setNotifications(d); }
-    } catch {}
+    } catch {
+      void 0;
+    }
   }, [token]);
 
   useEffect(() => {
@@ -190,7 +196,9 @@ export default function App() {
             setNotifications(prev => [msg.notification, ...prev]);
             showToast(msg.notification.message, 'info');
           }
-        } catch {}
+        } catch {
+          void 0;
+        }
       };
       socket.onclose = () => setTimeout(connect, 5000);
     };
@@ -216,13 +224,17 @@ export default function App() {
     try {
       await fetch(`${API_URL}/notifications/${id}/read`, { method: 'PUT', headers: { Authorization: `Bearer ${token}` } });
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: 1 } : n));
-    } catch {}
+    } catch {
+      void 0;
+    }
   };
   const handleMarkAllNotificationsRead = async () => {
     try {
       await fetch(`${API_URL}/notifications/read-all`, { method: 'PUT', headers: { Authorization: `Bearer ${token}` } });
       setNotifications(prev => prev.map(n => ({ ...n, is_read: 1 })));
-    } catch {}
+    } catch {
+      void 0;
+    }
   };
 
   const handleSelectProjectAndTask = async (projId, taskId) => {
@@ -367,7 +379,9 @@ export default function App() {
       setSystemUsers(eligible);
       setInviteUserId(eligible[0]?.id || '');
       setShowInvite(true);
-    } catch {}
+    } catch {
+      void 0;
+    }
   };
 
   const handleInviteSubmit = async (e) => {

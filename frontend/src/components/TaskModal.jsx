@@ -90,7 +90,9 @@ export default function TaskModal({ taskId, onClose, API_URL, token, projectMemb
             .then(r => r.ok ? r.json() : null)
             .then(d => { if (d) setComments(d); });
         }
-      } catch {}
+      } catch {
+        void 0;
+      }
     };
     window.addEventListener('websocket-message', handler);
     return () => window.removeEventListener('websocket-message', handler);
@@ -166,7 +168,9 @@ export default function TaskModal({ taskId, onClose, API_URL, token, projectMemb
         headers: { Authorization: `Bearer ${token}` }
       });
       setComments(prev => prev.filter(c => c.id !== commentId));
-    } catch {}
+    } catch {
+      void 0;
+    }
   };
 
   const handleClose = () => {
